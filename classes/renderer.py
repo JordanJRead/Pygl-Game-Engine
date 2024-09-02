@@ -40,7 +40,7 @@ class Renderer:
 
         glUniformMatrix4fv(glGetUniformLocation(self.shader, "viewMatrix"), 1, GL_FALSE, self.view_matrix)
         for obj in objects:
-            if obj.render_component:
+            if obj.render_component.active:
                 glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, obj.render_component.model_matrix)
                 obj.render_component.texture2d.use()
                 glBindVertexArray(obj.render_component.vao)

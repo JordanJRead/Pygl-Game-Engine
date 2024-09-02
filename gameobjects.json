@@ -1,0 +1,92 @@
+{
+"objects": [
+        {
+            "name": "main",
+            "transform": {
+                "pos": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                },
+                "rot": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "parent_name": "",
+            "render_component": {
+                "object_path": "",
+                "image_path": ""
+            },
+            "scripts": [
+                {
+                    "name": "PlayerMove",
+                    "args": [
+                        5,
+                        0.01,
+                        1920,
+                        1080
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "cube",
+            "transform": {
+                "pos": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 5
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                },
+                "rot": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "parent_name": "parent",
+            "render_component": {
+                "object_path": "assets/objects/Cube.txt",
+                "image_path": "assets/images/test.png"
+            },
+            "scripts": []
+        },
+        {
+            "name": "parent",
+            "transform": {
+                "pos": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 5
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                },
+                "rot": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "parent_name": "",
+            "render_component": {
+                "object_path": "",
+                "image_path": ""
+            },
+            "scripts": []
+        }
+    ]
+}

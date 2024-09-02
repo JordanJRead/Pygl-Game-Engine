@@ -6,31 +6,36 @@ from OpenGL.GL import *
 
 class RenderComponent:
     def __init__(self, obj_path: str, image_path: str) -> None:
-        self.model_matrix = mat4.create_identity()
-        self.vertices = load_obj(obj_path)
+        self.active = False
+        if obj_path:
+            self.active = True
+        if self.active:
+            self.model_matrix = mat4.create_identity()
+            self.vertices = load_obj(obj_path)
 
-        self.vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        glBufferData(GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL_STATIC_DRAW)
+            self.vbo = glGenBuffers(1)
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            glBufferData(GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL_STATIC_DRAW)
 
-        self.vao = glGenVertexArrays(1)
-        glBindVertexArray(self.vao)
-        
-        glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(0))
-        
-        glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(3 * 4))
+            self.vao = glGenVertexArrays(1)
+            glBindVertexArray(self.vao)
+            
+            glEnableVertexAttribArray(0)
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(0))
+            
+            glEnableVertexAttribArray(1)
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(3 * 4))
 
-        glEnableVertexAttribArray(2)
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(6 * 4))
+            glEnableVertexAttribArray(2)
+            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(6 * 4))
 
-        self.texture2d = Texture2D(image_path)
+            self.texture2d = Texture2D(image_path)
 
     def destroy(self):
-        self.texture2d.destroy()
-        glDeleteBuffers(1, (self.vbo,))
-        glDeleteVertexArrays(1, (self.vao,))
+        if self.active:
+            self.texture2d.destroy()
+            glDeleteBuffers(1, (self.vbo,))
+            glDeleteVertexArrays(1, (self.vao,))
 
 def load_obj(file_path: str) -> np.ndarray:
         vertices: list[float] = [] # x y z nx ny nz u v x y z nx ny nz u v...
@@ -78,7 +83,7 @@ def create_model_matrix(transform: Transform) -> np.ndarray:
 
 def create_entire_model_matrix(transform: Transform, parent = None, passed_model_matrix = None, inverse = False) -> np.ndarray:
     model_matrix = mat4.create_identity()
-    if passed_model_matrix:
+    if type(passed_model_matrix) != type(None):
         model_matrix = passed_model_matrix
     model_matrix = mat4.multiply(model_matrix, create_model_matrix(transform))
     if parent:

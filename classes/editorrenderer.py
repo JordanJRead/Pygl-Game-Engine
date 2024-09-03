@@ -61,12 +61,12 @@ class EditorRenderer:
                 obj.render_component.texture2d.use()
                 glBindVertexArray(obj.render_component.vao)
                 glDrawArrays(GL_TRIANGLES, 0, len(obj.render_component.vertices))
-
-        pg.draw.rect(self.screen, (255, 0, 0), pg.Rect(0, 0, self.width//2, self.height//2))
-        pg.draw.rect(self.screen, (0, 255, 0), pg.Rect(self.width//2, 0, self.width//2, self.height//2))
+        ui_surface = pg.surface.Surface((self.width, self.height), pg.SRCALPHA)
+        pg.draw.rect(ui_surface, (255, 0, 0, 255), pg.Rect(0, 0, self.width//2, self.height//2))
+        pg.draw.rect(ui_surface, (0, 255, 0), pg.Rect(self.width//2, 0, self.width//2, self.height//2))
         
-        pg.draw.rect(self.screen, (0, 0, 255), pg.Rect(0, self.height//2, self.width//2, self.height//2))
-        pg.draw.rect(self.screen, (255, 255, 255), pg.Rect(self.width//2, self.height//2, self.width//2, self.height//2))
+        pg.draw.rect(ui_surface, (0, 0, 255), pg.Rect(0, self.height//2, self.width//2, self.height//2))
+        pg.draw.rect(ui_surface, (255, 255, 255, 0), pg.Rect(self.width//2, self.height//2, self.width//2, self.height//2))
 
         glUseProgram(self.pg_shader)
         pg_texture = glGenTextures(1)
@@ -75,7 +75,7 @@ class EditorRenderer:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pg.image.tostring(self.screen, "RGBA"))
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pg.image.tostring(ui_surface, "RGBA"))
 
         glDisable(GL_DEPTH_TEST)
         glBindVertexArray(self.pg_vao)

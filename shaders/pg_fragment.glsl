@@ -7,5 +7,9 @@ uniform sampler2D pgSurface;
 out vec4 color;
 
 void main() {
-    color = texture(pgSurface, fragTexCoords);
+    vec4 testColor = texture(pgSurface, fragTexCoords);
+    if (testColor.w < 0.5) {
+        discard;
+    }
+    color = testColor;
 }

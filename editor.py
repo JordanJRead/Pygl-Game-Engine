@@ -1,88 +1,51 @@
-from classes.gameobject import GameObject
-from classes.transform import Transform
-from classes.rendercomponent import RenderComponent
-from classes.vec3 import Vec3
-from classes.editorrenderer import EditorRenderer
+from main import App
 import pygame as pg
-import importlib
-script_classes = importlib.import_module("assets.scripts")
+import pygame_gui as pgui
 import pyrr.matrix44 as mat4
-import json
-from typing import TypedDict
-from typing import Any
+from classes.gameobject import GameObject
 
-class Editor:
+class Editor(App):
     def __init__(self) -> None:
-        self.init_renderer(self)
-        self.init_game_objects(self)
+        super().__init__()
+
+    def init_ui(self):
+        self.ui_manager = pgui.UIManager((self.width, self.height))
+        self.game_object_buttons: dict[pgui.core.UIElement, GameObject] = {}
+        self.scroll_space = pgui.elements.UIScrollingContainer(pg.Rect(0, 0, self.width//2, self.height))
+        self.scroll_space.set_scrollable_area_dimensions((10000, 10000))
+        self.game_object_buttons[pgui.elements.UIButton(pg.Rect((350, 275), (100, 50)), self.game_objects[0].name, self.ui_manager, container=self.scroll_space)] = self.game_objects[0]
+        
+    def init_variables(self):
+        super().init_variables()
+    
+    def main_loop(self):
         running = True
+        self.delta_time = self.clock.tick(self.FPS) / 1000
         while running:
             for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    running = False
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
+                match event.type:
+                    case pg.QUIT:
                         running = False
+                    case pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            running = False
+                    case pgui.UI_BUTTON_PRESSED:
+                        for button in self.game_object_buttons:
+                            if event.ui_element == button:
+                                print(self.game_object_buttons[button].name)
+
+                self.ui_manager.process_events(event)
+            
+            self.ui_manager.update(self.delta_time)
+
             if len(self.game_objects) > 0:
                 try:
                     self.renderer.view_matrix = self.game_objects[0].scripts[0].get_view_matrix()
                 except:
                     self.renderer.view_matrix = mat4.create_identity()
-                self.renderer.render_objects(self.game_objects)
-        pg.quit()
-    
-    def init_renderer(self):
-        self.width = 1920
-        self.height = 1080
-        self.renderer = EditorRenderer(self.width, self.height)
-
-    def init_game_objects(self):
-        self.load_json("gameobjects.json")
-        for game_object in self.game_objects:
-            game_object.init_parent(self.game_objects)
-            for script in game_object.scripts:
-                script.start()
-
-    def load_json(self, path: str):
-        Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
-        TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
-        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str})
-        ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
-        ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "parent_name": str, "render_component": RenderDict, "scripts": list[ScriptDict]})
-        FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
-        self.game_objects: list[GameObject] = []
-        with open(path) as file:
-            json_dict: FileDict = json.load(file)
-        for game_object in json_dict["objects"]:
-            scripts = []
-            for script_dict in game_object["scripts"]:
-                class_ = getattr(script_classes, script_dict["name"])
-                scripts.append(class_(*script_dict["args"]))
-            self.game_objects.append(
-                GameObject(game_object["name"],
-                Transform(
-                    Vec3(
-                        game_object["transform"]["pos"]["x"],
-                        game_object["transform"]["pos"]["y"],
-                        game_object["transform"]["pos"]["z"],
-                    ),
-                    Vec3(
-                        game_object["transform"]["scale"]["x"],
-                        game_object["transform"]["scale"]["y"],
-                        game_object["transform"]["scale"]["z"],
-                    ),
-                    Vec3(
-                        game_object["transform"]["rot"]["x"],
-                        game_object["transform"]["rot"]["y"],
-                        game_object["transform"]["rot"]["z"],
-                    )
-                ),
-                game_object["parent_name"],
-                RenderComponent(
-                    game_object["render_component"]["object_path"],
-                    game_object["render_component"]["image_path"]
-                ),
-                scripts
-            ))
+                self.renderer.render_objects(self.game_objects, (self.width//2, 0, self.width//2, self.height//2), False)
+                self.renderer.render_ui(self.ui_manager)
+            self.delta_time = self.clock.tick(self.FPS) / 1000
+        self.destroy()
 
 editor = Editor()

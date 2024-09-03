@@ -24,6 +24,8 @@ class GameObject:
     def destroy(self):
         if self.render_component:
             self.render_component.destroy()
+        for script in self.scripts:
+            script.end()
     
     def update_transform(self, transform: Transform):
         self.transform = transform

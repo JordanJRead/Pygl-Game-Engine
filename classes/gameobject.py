@@ -13,7 +13,6 @@ class GameObject:
         self.scripts = scripts
         for script in self.scripts:
             script.game_object = self
-            script.start()
 
     def init_parent(self, game_objects):
         for game_object in game_objects:

@@ -13,12 +13,8 @@ from typing import Any
 
 class Editor:
     def __init__(self) -> None:
-        self.width = 1920
-        self.height = 1080
-        self.renderer = EditorRenderer(self.width, self.height)
-        self.load_json("gameobjects.json")
-        for game_object in self.game_objects:
-            game_object.init_parent(self.game_objects)
+        self.init_renderer(self)
+        self.init_game_objects(self)
         running = True
         while running:
             for event in pg.event.get():
@@ -35,6 +31,18 @@ class Editor:
                 self.renderer.render_objects(self.game_objects)
         pg.quit()
     
+    def init_renderer(self):
+        self.width = 1920
+        self.height = 1080
+        self.renderer = EditorRenderer(self.width, self.height)
+
+    def init_game_objects(self):
+        self.load_json("gameobjects.json")
+        for game_object in self.game_objects:
+            game_object.init_parent(self.game_objects)
+            for script in game_object.scripts:
+                script.start()
+
     def load_json(self, path: str):
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
         TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})

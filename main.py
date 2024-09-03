@@ -9,7 +9,9 @@ import json
 from typing import TypedDict
 from typing import Any
 from pydoc import locate
-
+# Required to run on my Crostini Linux virtual machine
+import os
+os.environ["SDL_VIDEO_X11_FORCE_EGL"] = "1"
 class App:
     def __init__(self) -> None:
         self.init_variables()
@@ -21,8 +23,8 @@ class App:
         pass
 
     def init_variables(self):
-        self.width = 1920
-        self.height = 1080
+        self.width = 600
+        self.height = 400
         self.FPS = 144
         self.renderer = Renderer(self.width, self.height)
         self.clock = pg.time.Clock()

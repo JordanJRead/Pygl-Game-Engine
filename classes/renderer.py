@@ -13,7 +13,8 @@ class Renderer:
         self.height = height
         pg.init()
         self.screen = pg.display.set_mode((width, height), pg.OPENGL|pg.DOUBLEBUF).convert_alpha()
-        glClearColor(0.4, 0.4, 0.4, 1)
+        self.clear_color = (0.4, 0.4, 0.4, 1)
+        glClearColor(*self.clear_color)
         glActiveTexture(GL_TEXTURE0)
         glEnable(GL_DEPTH_TEST)
         self.shader = self.create_shader("shaders/vertex.glsl", "shaders/fragment.glsl")
@@ -67,8 +68,7 @@ class Renderer:
         if flip:
             pg.display.flip()
 
-    def render_ui(self, ui_manager: pgui.UIManager):
-        ui_surface = pg.surface.Surface((self.width, self.height), pg.SRCALPHA)
+    def render_ui(self, ui_manager: pgui.UIManager, ui_surface: pg.Surface):
         ui_manager.draw_ui(ui_surface)
         pg_texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, pg_texture)

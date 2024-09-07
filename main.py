@@ -9,6 +9,7 @@ import json
 from typing import TypedDict
 from typing import Any
 from pydoc import locate
+
 # Required to run on my Crostini Linux virtual machine
 import os
 os.environ["SDL_VIDEO_X11_FORCE_EGL"] = "1"
@@ -23,8 +24,8 @@ class App:
         pass
 
     def init_variables(self):
-        self.width = 600
-        self.height = 400
+        self.width = 1920
+        self.height = 1080
         self.FPS = 144
         self.renderer = Renderer(self.width, self.height)
         self.clock = pg.time.Clock()
@@ -55,6 +56,7 @@ class App:
         for game_object in self.game_objects:
             game_object.init_parent(self.game_objects)
             for script in game_object.scripts:
+                script.app = self
                 script.start()
     
     def destroy(self):
@@ -82,7 +84,6 @@ class App:
             scripts = []
             for script_dict in game_object["scripts"]:
                 class_ = locate("assets.scripts." + script_dict["name"].lower() + "." + script_dict["name"])
-                print("assets.scripts." + script_dict["name"].lower() + "." + script_dict["name"])
                 scripts.append(class_(*script_dict["args"]))
             self.game_objects.append(
                 GameObject(game_object["name"],

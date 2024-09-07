@@ -1,27 +1,25 @@
-from classes.monobehaviour import MonoBehaviour
 import pygame as pg
 from math import pi, cos, sin
-from classes.transform import Transform
 from classes.vec3 import Vec3
 import pyrr.matrix44 as mat4
 import numpy as np
-from OpenGL.GL import *
-class PlayerMove(MonoBehaviour):
-    def __init__(self, speed: float, sens: float) -> None:
-        super().__init__()
+
+class EditorCamera:
+    def __init__(self, speed: float, sens: float, width: int, height: int, viewport: tuple[int, int, int, int]) -> None:
         self.speed = speed
         self.sens = sens
+        self.width = width
+        self.height = height
         self.pitch = 0
         self.yaw = 0
+        self.pos = Vec3(0, 0, 0)
         self.prev_mouse_position = pg.mouse.get_pos()
+        self.rotation = Vec3(0, 0, 0)
+        self.viewport = viewport
 
-    def start(self):
-        self.width = self.app.width
-        self.height = self.app.height
-
-    def update(self):
+    def update(self, delta_time):
         self.rotate()
-        self.move()
+        self.move(delta_time)
 
     def rotate(self):
         current_mouse_x = pg.mouse.get_pos()[0]
@@ -41,14 +39,16 @@ class PlayerMove(MonoBehaviour):
             self.pitch = -pi / 2 + 0.001
         
         # Keep mouse from moving off screen
-        if not (self.width/4 < current_mouse_x < 3 * (self.width/4)):
-            pg.mouse.set_pos(self.width/2, self.height/2)
-        if not (self.height/4 < current_mouse_y < 3 * (self.height/4)):
-            pg.mouse.set_pos(self.width/2, self.height/2)
-        self.prev_mouse_position = pg.mouse.get_pos()
-        self.game_object.update_transform(Transform(self.game_object.transform.pos, self.game_object.transform.scale, Vec3(self.pitch, 0, self.yaw)))
+        middle_pos = (self.viewport[0] + self.viewport[2] // 2, self.height - self.viewport[1] - self.viewport[3] // 2)
+        if not (self.viewport[0] < current_mouse_x < self.viewport[0] + self.viewport[2]):
+            pg.mouse.set_pos(*middle_pos)
+        if not (self.height - self.viewport[1] - self.viewport[3] < current_mouse_y < self.height - self.viewport[1]):
+            pg.mouse.set_pos(*middle_pos)
 
-    def move(self):
+        self.prev_mouse_position = pg.mouse.get_pos()
+        self.rotataion = Vec3(self.pitch, 0, self.yaw)
+
+    def move(self, delta_time):
         move_vector = Vec3(0, 0, 0)
         keys = pg.key.get_pressed()
         if keys[pg.K_a]:
@@ -63,16 +63,15 @@ class PlayerMove(MonoBehaviour):
             move_vector.z -= 1
         if keys[pg.K_w]:
             move_vector.z += 1
-        move_vector = move_vector.normalize() * self.speed * self.delta_time
+        move_vector = move_vector.normalize() * self.speed * delta_time
         
         move_vector = Vec3(move_vector.x * cos(-self.yaw) - move_vector.z * sin(-self.yaw), move_vector.y, move_vector.x * sin(-self.yaw) + move_vector.z * cos(-self.yaw))
-
-        self.game_object.update_transform(Transform(self.game_object.transform.pos + move_vector, self.game_object.transform.scale, self.game_object.transform.rotation))
+        self.pos += move_vector
     
     def get_view_matrix(self, usePosition = True):
         camera_matrix = mat4.create_identity(dtype=np.float32)
         camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_axis_rotation([1, 0, 0], self.pitch, dtype=np.float32))
         camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_axis_rotation([0, 1, 0], self.yaw, dtype=np.float32))
         if usePosition:
-            camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_translation(self.game_object.transform.pos.to_list()))
+            camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_translation(self.pos.to_list()))
         return mat4.inverse(camera_matrix)

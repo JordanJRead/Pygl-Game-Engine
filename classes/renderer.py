@@ -17,6 +17,8 @@ class Renderer:
         glClearColor(*self.clear_color)
         glActiveTexture(GL_TEXTURE0)
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.shader = self.create_shader("shaders/vertex.glsl", "shaders/fragment.glsl")
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader, "tex"), 0)
@@ -59,9 +61,11 @@ class Renderer:
         glUseProgram(self.shader)
         glViewport(*viewport)
         glUniformMatrix4fv(glGetUniformLocation(self.shader, "viewMatrix"), 1, GL_FALSE, self.view_matrix)
+
         for obj in objects:
             if obj.render_component.active:
                 glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, obj.render_component.model_matrix)
+                glUniform1i(glGetUniformLocation(self.shader, "isBright"), obj.render_component.is_bright)
                 obj.render_component.texture2d.use()
                 glBindVertexArray(obj.render_component.vao)
                 glDrawArrays(GL_TRIANGLES, 0, len(obj.render_component.vertices))

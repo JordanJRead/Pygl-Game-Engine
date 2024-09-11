@@ -7,6 +7,7 @@ from OpenGL.GL import *
 class RenderComponent:
     def __init__(self, obj_path: str, image_path: str) -> None:
         self.active = False
+        self.is_bright = False
         if obj_path:
             self.active = True
         if self.active:

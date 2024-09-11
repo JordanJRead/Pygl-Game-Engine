@@ -19,7 +19,9 @@
                     "z": 0
                 }
             },
-            "parent_name": "",
+            "children": [
+
+            ],
             "render_component": {
                 "object_path": "",
                 "image_path": ""
@@ -33,32 +35,6 @@
                     ]
                 }
             ]
-        },
-        {
-            "name": "cube",
-            "transform": {
-                "pos": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 5
-                },
-                "scale": {
-                    "x": 1,
-                    "y": 1,
-                    "z": 1
-                },
-                "rot": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 0
-                }
-            },
-            "parent_name": "parent",
-            "render_component": {
-                "object_path": "assets/objects/Cube.txt",
-                "image_path": "assets/images/test.png"
-            },
-            "scripts": []
         },
         {
             "name": "parent",
@@ -79,7 +55,63 @@
                     "z": 0
                 }
             },
-            "parent_name": "",
+            "children": [
+                {
+                    "name": "cube",
+                    "transform": {
+                        "pos": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 5
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        },
+                        "rot": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        }
+                    },
+                    "children": [
+                        {
+                            "name": "cube2",
+                            "transform": {
+                                "pos": {
+                                    "x": 0,
+                                    "y": 4,
+                                    "z": 0
+                                },
+                                "scale": {
+                                    "x": 1,
+                                    "y": 1,
+                                    "z": 1
+                                },
+                                "rot": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                }
+                            },
+                            "children": [
+                                
+                            ],
+                            "render_component": {
+                                "object_path": "assets/objects/Cube.txt",
+                                "image_path": "assets/images/test.png"
+                            },
+                            "scripts": []
+                        }
+                    ],
+                    "render_component": {
+                        "object_path": "assets/objects/Cube.txt",
+                        "image_path": "assets/images/test.png"
+                    },
+                    "scripts": []
+                }
+            ],
             "render_component": {
                 "object_path": "",
                 "image_path": ""

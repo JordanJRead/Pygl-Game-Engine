@@ -12,6 +12,14 @@ class Editor(App):
         super().__init__(width, height, FPS)
 
     def init_ui(self):
+        self.viewport = (self.width//4, self.height//4, self.width//2, self.height//2)
+        self.viewport_rect = pg.Rect(self.viewport[0], self.height - self.viewport[1] - self.viewport[3], self.viewport[2], self.viewport[3])
+
+        self.selected_game_object: None | GameObject = None
+        self.camera = EditorCamera(5, 0.005, self.width, self.height, self.viewport, 0.1, 10000, 90, self.width/self.height)
+        self.is_moving = False
+
+        # UI Texture
         self.ui_texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, self.ui_texture)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
@@ -19,16 +27,21 @@ class Editor(App):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
+        # Setting up
         self.colors = Colors()
-        self.ui_settings = UISettings(pg.Rect(40, 40, self.width / 6.4, self.height - 75), self.colors.light_green)
-        self.selected_game_object: None | GameObject = None
-        self.viewport = (self.width//4, self.height//4, self.width//2, self.height//2)
-        self.viewport_rect = pg.Rect(self.viewport[0], self.height - self.viewport[1] - self.viewport[3], self.viewport[2], self.viewport[3])
-        self.camera = EditorCamera(5, 0.005, self.width, self.height, self.viewport, 0.1, 10000, 90, self.width/self.height)
-        self.is_moving = False
+        # self.ui_settings = UISettings(
+        #                               hierarchy_rect=pg.Rect(40, 40, self.width / 6.4, self.height - 75),
+        #                               hierarchy_color=self.colors.light_green,
+        #                               inspector_rect=pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height -75),
+        #                               inspector_color=self.colors.light_green
+        #                               )
 
         self.ui_surface = pg.surface.Surface((self.width, self.height), pg.SRCALPHA)
         self.ui_manager = pgui.UIManager((self.width, self.height), "theme.json")
+
+        # Hierarchy
+        hierarchy_rect = pg.Rect(40, 40, self.width / 6.4, self.height - 75)
+        self.hierarchy_panel = pgui.elements.UIPanel(hierarchy_rect, manager=self.ui_manager)
         self.game_object_buttons: dict[pgui.core.UIElement, GameObject] = {}
 
         self.top_margin = 10
@@ -39,9 +52,16 @@ class Editor(App):
         self.y_depth = 0
         for game_object in self.game_objects:
             self.create_buttons(game_object, self.y_depth)
+        
+        # Inspector
+        inspector_rect = pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height -75)
+        self.inspector_panel = pgui.elements.UIPanel(inspector_rect, manager=self.ui_manager)
+        self.object_name = pgui.elements.UITextEntryLine(pg.Rect(0, 0, 100, 50), self.ui_manager, self.inspector_panel, anchors={"centerx": "centerx"}, placeholder_text="hello")
     
     def create_buttons(self, game_object: GameObject, y_depth, x_depth: int = 0):
-        self.game_object_buttons[pgui.elements.UIButton(pg.Rect((self.ui_settings.hierarchy_rect.left + self.left_margin + self.depth_offset * x_depth, self.ui_settings.hierarchy_rect.top + self.top_margin + self.size * y_depth), (100, 50)), game_object.name, self.ui_manager)] = game_object
+        x = self.left_margin + self.depth_offset * x_depth
+        y = self.top_margin + self.size * y_depth
+        self.game_object_buttons[pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.hierarchy_panel)] = game_object
         self.y_depth += 1
         for child in game_object.children:
             self.create_buttons(child, self.y_depth, x_depth + 1)
@@ -92,7 +112,6 @@ class Editor(App):
             # UI
             pg.draw.rect(self.ui_surface, self.colors.dark_green, pg.Rect(0, 0, self.width, self.height))
             pg.draw.rect(self.ui_surface, (0, 0, 0, 0), self.viewport_rect)
-            pg.draw.rect(self.ui_surface, self.ui_settings.hierarchy_color, self.ui_settings.hierarchy_rect)
 
             self.ui_manager.draw_ui(self.ui_surface)
             self.ui_surface = pg.transform.flip(self.ui_surface, False, True)

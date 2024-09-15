@@ -1,9 +1,11 @@
 import pygame as pg
 
 class UISettings:
-    def __init__(self, hierarchy_rect: pg.Rect, hierarchy_color: tuple[int, int, int]) -> None:
+    def __init__(self, hierarchy_rect: pg.Rect, hierarchy_color: tuple[int, int, int], inspector_rect: pg.Rect, inspector_color: tuple[int, int, int]) -> None:
         self.hierarchy_rect = hierarchy_rect
         self.hierarchy_color = hierarchy_color
+        self.inspector_rect = inspector_rect
+        self.inspector_color = inspector_color
 
 class Colors:
     def __init__(self) -> None:

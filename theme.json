@@ -1,8 +1,6 @@
-{
-    "defaults":
-    {
-        "colours":
-        {
+{   
+    "button": {
+        "colours": {
             "normal_bg":"rgb(138,99,64), rgb(97,69,44), 270",
             "hovered_bg":"rgb(78,45,24), rgb(55,31,17), 270",
             "disabled_bg":"#25292e",
@@ -23,6 +21,13 @@
             "active_border": "#8080B0",
             "filled_bar":"#f4251b",
             "unfilled_bar":"#CCCCCC"
+        }
+    },
+
+    "panel": {
+        "colours": {
+            "normal_border": "rgb(6, 8, 5)",
+            "dark_bg":"rgb(76,100,68), rgb(53,70,48), 270"
         }
     }
 }

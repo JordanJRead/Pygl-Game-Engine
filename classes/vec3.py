@@ -41,3 +41,7 @@ class Vec3:
         if abs(self) != 0:
             return self / abs(self)
         return self
+    
+    @staticmethod
+    def zero():
+        return Vec3(0, 0, 0)

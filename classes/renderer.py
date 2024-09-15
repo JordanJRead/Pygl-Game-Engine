@@ -55,6 +55,7 @@ class Renderer:
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * 4, ctypes.c_void_p(3 * 4))
     
     def render_objects(self, objects: list[GameObject], viewport = None, flip = True):
+        # Frame setup
         if viewport == None:
             viewport = (0, 0, self.width, self.height)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -62,15 +63,20 @@ class Renderer:
         glViewport(*viewport)
         glUniformMatrix4fv(glGetUniformLocation(self.shader, "viewMatrix"), 1, GL_FALSE, self.view_matrix)
 
-        for obj in objects:
-            if obj.render_component.active:
-                glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, obj.render_component.model_matrix)
-                glUniform1i(glGetUniformLocation(self.shader, "isBright"), obj.render_component.is_bright)
-                obj.render_component.texture2d.use()
-                glBindVertexArray(obj.render_component.vao)
-                glDrawArrays(GL_TRIANGLES, 0, len(obj.render_component.vertices))
+        for object in objects:
+            self.render_object(object)
         if flip:
             pg.display.flip()
+
+    def render_object(self, object: GameObject):
+            if object.render_component.is_active:
+                glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, object.render_component.model_matrix)
+                glUniform1i(glGetUniformLocation(self.shader, "isBright"), object.render_component.is_bright)
+                object.render_component.texture2d.use()
+                glBindVertexArray(object.render_component.vao)
+                glDrawArrays(GL_TRIANGLES, 0, len(object.render_component.vertices))
+            for child in object.children:
+                self.render_object(child)
 
     def render_ui(self, ui_manager: pgui.UIManager, ui_surface: pg.Surface):
         ui_manager.draw_ui(ui_surface)

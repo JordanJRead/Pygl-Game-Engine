@@ -1,7 +1,7 @@
 {
 "objects": [
         {
-            "name": "main",
+            "name": "camera",
             "transform": {
                 "pos": {
                     "x": 0,
@@ -22,10 +22,7 @@
             "children": [
 
             ],
-            "render_component": {
-                "object_path": "",
-                "image_path": ""
-            },
+            "render_component": null,
             "scripts": [
                 {
                     "name": "PlayerMove",
@@ -112,10 +109,7 @@
                     "scripts": []
                 }
             ],
-            "render_component": {
-                "object_path": "",
-                "image_path": ""
-            },
+            "render_component": null,
             "scripts": []
         }
     ]

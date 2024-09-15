@@ -7,8 +7,8 @@ import pyrr.matrix44 as mat4
 import numpy as np
 from OpenGL.GL import *
 class PlayerMove(MonoBehaviour):
-    def __init__(self, speed: float, sens: float) -> None:
-        super().__init__()
+    def __init__(self, game_object, app, speed: float, sens: float) -> None:
+        super().__init__(game_object, app)
         self.speed = speed
         self.sens = sens
         self.pitch = 0
@@ -46,7 +46,7 @@ class PlayerMove(MonoBehaviour):
         if not (self.height/4 < current_mouse_y < 3 * (self.height/4)):
             pg.mouse.set_pos(self.width/2, self.height/2)
         self.prev_mouse_position = pg.mouse.get_pos()
-        self.game_object.update_transform(Transform(self.game_object.transform.pos, self.game_object.transform.scale, Vec3(self.pitch, 0, self.yaw)))
+        self.game_object.update_transform(Transform(self.game_object.local_transform.pos, self.game_object.local_transform.scale, Vec3(self.pitch, 0, self.yaw)))
 
     def move(self):
         move_vector = Vec3(0, 0, 0)
@@ -67,12 +67,12 @@ class PlayerMove(MonoBehaviour):
         
         move_vector = Vec3(move_vector.x * cos(-self.yaw) - move_vector.z * sin(-self.yaw), move_vector.y, move_vector.x * sin(-self.yaw) + move_vector.z * cos(-self.yaw))
 
-        self.game_object.update_transform(Transform(self.game_object.transform.pos + move_vector, self.game_object.transform.scale, self.game_object.transform.rotation))
+        self.game_object.update_transform(Transform(self.game_object.local_transform.pos + move_vector, self.game_object.local_transform.scale, self.game_object.local_transform.rotation))
     
     def get_view_matrix(self, usePosition = True):
         camera_matrix = mat4.create_identity(dtype=np.float32)
         camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_axis_rotation([1, 0, 0], self.pitch, dtype=np.float32))
         camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_axis_rotation([0, 1, 0], self.yaw, dtype=np.float32))
         if usePosition:
-            camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_translation(self.game_object.transform.pos.to_list()))
+            camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_translation(self.game_object.local_transform.pos.to_list()))
         return mat4.inverse(camera_matrix)

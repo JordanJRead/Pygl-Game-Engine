@@ -1,3 +1,5 @@
+import assets.scripts
+import assets.scripts.playermove
 from classes.gameobject import GameObject
 from classes.transform import Transform
 from classes.rendercomponent import RenderComponent
@@ -9,15 +11,19 @@ import json
 from typing import TypedDict
 from typing import Any
 from pydoc import locate
+import classes.rendercomponent as rendercomponent
+import assets
 
 # Required to run on my Crostini Linux virtual machine
 import os
 os.environ["SDL_VIDEO_X11_FORCE_EGL"] = "1"
+
 class App:
     def __init__(self, width: int, height: int, FPS: int) -> None:
         self.width = width
         self.height = height
         self.FPS = FPS
+        self.camera_object = None
         self.renderer = Renderer(self.width, self.height)
         self.clock = pg.time.Clock()
         self.init_game_objects()
@@ -39,23 +45,25 @@ class App:
                     if event.key == pg.K_ESCAPE:
                         running = False
             if len(self.game_objects) > 0:
-                try:
-                    self.renderer.view_matrix = self.game_objects[0].scripts[0].get_view_matrix()
-                except:
-                    self.renderer.view_matrix = mat4.create_identity()
+                self.renderer.view_matrix = self.camera_object.get_component(assets.scripts.playermove.PlayerMove).get_view_matrix()
                 self.update_game_objects()
                 self.renderer.render_objects(self.game_objects)
             self.delta_time = self.clock.tick(self.FPS) / 1000
 
     def init_game_objects(self):
-        # First game object is the camera
-        self.game_objects, self.ui_game_objects = self.load_json("gameobjects.json")
+        self.game_objects = self.load_json("gameobjects.json")
         for game_object in self.game_objects:
-            game_object.init_parent(self.game_objects)
-            for script in game_object.scripts:
-                script.app = self
-                script.start()
+            self.init_game_object(game_object)
     
+    def init_game_object(self, game_object: GameObject):
+        if game_object.name == "camera":
+            self.camera_object = game_object
+        for component in game_object.components:
+            component.start()
+        game_object.render_component.model_matrix = rendercomponent.create_entire_model_matrix(game_object.local_transform, game_object.parent)
+        for child in game_object.children:
+            self.init_game_object(child)
+
     def destroy(self):
         for obj in self.game_objects:
             obj.destroy()
@@ -63,56 +71,67 @@ class App:
 
     def update_game_objects(self):
         for game_object in self.game_objects:
-            for script in game_object.scripts:
-                script.delta_time = self.delta_time
-                script.update()
+            for custom_object in game_object.components:
+                custom_object.delta_time = self.delta_time
+                custom_object.update()
 
-    def create_game_object_from_json(self, game_object_json: dict, game_objects: list[GameObject], ui_game_objects: list[tuple[GameObject, int]], depth: int = 0, parent_name: str = ""):
+    """
+    Takes in a game object json dictionary and returns a gameobject with the info from the json put in. Calls itself to create children
+    """
+    def create_game_object_from_json(self, game_object_dict: dict):
+        # Types
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
         TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
-        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str, "is_bright": int})
+        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str, "is_bright": int}) # Can be None
         ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
         ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
 
+        game_object_dict: ObjectDict = game_object_dict
+
+        # Children
+        children_dicts: list[ObjectDict] = game_object_dict["children"]
+        children: list[GameObject] = []
+        for child_dict in children_dicts:
+            children.append(self.create_game_object_from_json(child_dict))
+
+        # Scripts
         scripts = []
-        game_object_json: ObjectDict = game_object_json
-        for script_dict in game_object_json["scripts"]:
+        for script_dict in game_object_dict["scripts"]:
             class_ = locate("assets.scripts." + script_dict["name"].lower() + "." + script_dict["name"])
-            scripts.append(class_(*script_dict["args"]))
-        game_object = GameObject(game_object_json["name"],
-            Transform(
+            arguments = script_dict["args"]
+            scripts.append((class_, arguments))
+
+        # Render component
+        render_component: None | RenderComponent = None
+        if game_object_dict["render_component"]:
+            render_component = RenderComponent(game_object_dict["render_component"]["object_path"], game_object_dict["render_component"]["image_path"])
+
+        game_object = GameObject(
+            app=self,
+            name=game_object_dict["name"],
+            local_transform=Transform(
                 Vec3(
-                    game_object_json["transform"]["pos"]["x"],
-                    game_object_json["transform"]["pos"]["y"],
-                    game_object_json["transform"]["pos"]["z"],
+                    game_object_dict["transform"]["pos"]["x"],
+                    game_object_dict["transform"]["pos"]["y"],
+                    game_object_dict["transform"]["pos"]["z"],
                 ),
                 Vec3(
-                    game_object_json["transform"]["scale"]["x"],
-                    game_object_json["transform"]["scale"]["y"],
-                    game_object_json["transform"]["scale"]["z"],
+                    game_object_dict["transform"]["scale"]["x"],
+                    game_object_dict["transform"]["scale"]["y"],
+                    game_object_dict["transform"]["scale"]["z"],
                 ),
                 Vec3(
-                    game_object_json["transform"]["rot"]["x"],
-                    game_object_json["transform"]["rot"]["y"],
-                    game_object_json["transform"]["rot"]["z"],
+                    game_object_dict["transform"]["rot"]["x"],
+                    game_object_dict["transform"]["rot"]["y"],
+                    game_object_dict["transform"]["rot"]["z"],
                 )
             ),
-            parent_name,
-            RenderComponent(
-                game_object_json["render_component"]["object_path"],
-                game_object_json["render_component"]["image_path"]
-            ),
-            scripts
+            children=children,
+            render_component= render_component,
+            scripts=scripts,
         )
-        game_objects.append(game_object)
-        ui_game_objects.append(
-            (game_object, depth)
-        )
-        for child in game_object_json["children"]:
-            child: ObjectDict = child
-            self.create_game_object_from_json(child, game_objects, ui_game_objects, depth + 1, game_object_json["name"])
-
-        return game_objects, ui_game_objects
+        
+        return game_object
 
     def load_json(self, path: str):
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
@@ -121,13 +140,15 @@ class App:
         ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
         ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
         FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
+
         game_objects: list[GameObject] = []
-        ui_game_objects: list[tuple[GameObject, int]] = []
+
         with open(path) as file:
             json_dict: FileDict = json.load(file)
+
         for game_object in json_dict["objects"]:
-            game_objects, ui_game_objects = self.create_game_object_from_json(game_object, game_objects, ui_game_objects)
-        return game_objects, ui_game_objects
+            game_objects.append(self.create_game_object_from_json(game_object))
+        return game_objects
 
     def search_game_objects(self, name: str):
         for game_object in self.game_objects:

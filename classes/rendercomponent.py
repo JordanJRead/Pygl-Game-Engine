@@ -1,17 +1,19 @@
+from __future__ import annotations
 from classes.texture import Texture2D
 import pyrr.matrix44 as mat4
 from classes.transform import Transform
 import numpy as np
 from OpenGL.GL import *
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.gameobject import GameObject
 
 class RenderComponent:
-    def __init__(self, obj_path: str, image_path: str) -> None:
-        self.active = False
+    def __init__(self, obj_path: str, image_path: str, active=True) -> None:
+        self.is_active = active
         self.is_bright = False
-        if obj_path:
-            self.active = True
-        if self.active:
-            self.model_matrix = mat4.create_identity()
+        self.model_matrix = mat4.create_identity()
+        if active:
             self.vertices = load_obj(obj_path)
 
             self.vbo = glGenBuffers(1)
@@ -33,7 +35,7 @@ class RenderComponent:
             self.texture2d = Texture2D(image_path)
 
     def destroy(self):
-        if self.active:
+        if self.is_active:
             self.texture2d.destroy()
             glDeleteBuffers(1, (self.vbo,))
             glDeleteVertexArrays(1, (self.vao,))
@@ -82,13 +84,11 @@ def create_model_matrix(transform: Transform) -> np.ndarray:
     model_matrix = mat4.multiply(model_matrix, mat4.create_from_translation(transform.pos.to_list(), dtype=np.float32))
     return model_matrix
 
-def create_entire_model_matrix(transform: Transform, parent = None, passed_model_matrix = None, inverse = False) -> np.ndarray:
+def create_entire_model_matrix(transform: Transform, parent: None | GameObject = None, passed_model_matrix = None) -> np.ndarray:
     model_matrix = mat4.create_identity()
     if type(passed_model_matrix) != type(None):
         model_matrix = passed_model_matrix
     model_matrix = mat4.multiply(model_matrix, create_model_matrix(transform))
     if parent:
-        return create_entire_model_matrix(parent.transform, parent.parent, model_matrix, inverse)
-    if inverse:
-        return mat4.inverse(model_matrix)
+        return create_entire_model_matrix(parent.local_transform, parent.parent, model_matrix)
     return model_matrix

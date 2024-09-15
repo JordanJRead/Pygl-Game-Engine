@@ -5,3 +5,7 @@ class Transform:
         self.pos = pos
         self.scale = scale
         self.rotation = rotation
+    
+    @staticmethod
+    def zero():
+        return Transform(Vec3.zero(), Vec3.zero(), Vec3.zero())

@@ -4,7 +4,9 @@ import pygame_gui as pgui
 import pyrr.matrix44 as mat4
 from classes.gameobject import GameObject
 from classes.editorcamera import EditorCamera
-from classes.uiutils import Colors, UISettings
+from classes.colors import Colors
+from classes.inspector import Inspector
+from classes.hierarchy import Hierarchy
 from OpenGL.GL import *
 
 class Editor(App):
@@ -12,6 +14,8 @@ class Editor(App):
         super().__init__(width, height, FPS)
 
     def init_ui(self):
+        self.window_name = "Editor"
+        pg.display.set_caption(self.window_name)
         self.viewport = (self.width//4, self.height//4, self.width//2, self.height//2)
         self.viewport_rect = pg.Rect(self.viewport[0], self.height - self.viewport[1] - self.viewport[3], self.viewport[2], self.viewport[3])
 
@@ -29,46 +33,26 @@ class Editor(App):
 
         # Setting up
         self.colors = Colors()
-        # self.ui_settings = UISettings(
-        #                               hierarchy_rect=pg.Rect(40, 40, self.width / 6.4, self.height - 75),
-        #                               hierarchy_color=self.colors.light_green,
-        #                               inspector_rect=pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height -75),
-        #                               inspector_color=self.colors.light_green
-        #                               )
-
         self.ui_surface = pg.surface.Surface((self.width, self.height), pg.SRCALPHA)
         self.ui_manager = pgui.UIManager((self.width, self.height), "theme.json")
 
         # Hierarchy
         hierarchy_rect = pg.Rect(40, 40, self.width / 6.4, self.height - 75)
-        self.hierarchy_panel = pgui.elements.UIPanel(hierarchy_rect, manager=self.ui_manager)
-        self.game_object_buttons: dict[pgui.core.UIElement, GameObject] = {}
+        self.hierarchy =  Hierarchy(hierarchy_rect, self.ui_manager, self.game_objects)
 
-        self.top_margin = 10
-        self.left_margin = 10
-        self.size = 50
-        self.depth_offset = 50
-
-        self.y_depth = 0
-        for game_object in self.game_objects:
-            self.create_buttons(game_object, self.y_depth)
-        
         # Inspector
         inspector_rect = pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height -75)
-        self.inspector_panel = pgui.elements.UIPanel(inspector_rect, manager=self.ui_manager)
-        self.object_name = pgui.elements.UITextEntryLine(pg.Rect(0, 0, 100, 50), self.ui_manager, self.inspector_panel, anchors={"centerx": "centerx"}, placeholder_text="hello")
-    
-    def create_buttons(self, game_object: GameObject, y_depth, x_depth: int = 0):
-        x = self.left_margin + self.depth_offset * x_depth
-        y = self.top_margin + self.size * y_depth
-        self.game_object_buttons[pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.hierarchy_panel)] = game_object
-        self.y_depth += 1
-        for child in game_object.children:
-            self.create_buttons(child, self.y_depth, x_depth + 1)
+        self.inspector = Inspector(inspector_rect, self.ui_manager)
 
     def select_game_object(self, game_object: GameObject):
         if self.selected_game_object:
             self.selected_game_object.render_component.is_bright = False
+
+        if self.selected_game_object == game_object:
+            self.selected_game_object = None
+            self.inspector.set_game_object(None)
+            return
+        self.inspector.set_game_object(game_object)
         self.selected_game_object = game_object
         game_object.render_component.is_bright = True
 
@@ -92,12 +76,21 @@ class Editor(App):
                         if event.button == 3:
                             self.is_moving = False
                     case pgui.UI_BUTTON_PRESSED:
-                        for button in self.game_object_buttons:
+                        for button in self.hierarchy.game_object_buttons:
                             if event.ui_element == button:
-                                self.select_game_object(self.game_object_buttons[button])
+                                self.select_game_object(self.hierarchy.game_object_buttons[button])
+                    
+                    # Change game object name
+                    case pgui.UI_TEXT_ENTRY_FINISHED:
+                        if event.ui_object_id == "panel." + self.inspector.ui_id:
+                            self.selected_game_object.name = event.text
+                            self.hierarchy.game_objects = self.game_objects
+                            self.hierarchy.build_buttons()
+                            pg.display.set_caption("*" + self.window_name)
                 self.ui_manager.process_events(event)
             
             self.ui_manager.update(self.delta_time)
+            self.ui_manager.rebuild_all_from_changed_theme_data()
 
             # Render scene
             self.renderer.render_objects_to_fbo(
@@ -125,5 +118,10 @@ class Editor(App):
             if self.is_moving:
                 self.camera.update(self.delta_time)
             self.delta_time = self.clock.tick(self.FPS) / 1000
+
+    def save(self, path: str = "gameobjects.json"):
+        # with open(path, "r") as file:
+        pass
+
 
 editor = Editor(1920, 1080, 144)

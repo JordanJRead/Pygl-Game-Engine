@@ -1,18 +1,15 @@
-import assets.scripts
-import assets.scripts.playermove
 from classes.gameobject import GameObject
 from classes.transform import Transform
 from classes.rendercomponent import RenderComponent
 from classes.vec3 import Vec3
 from classes.renderer import Renderer
+import classes.rendercomponent as rendercomponent
+from assets.scripts.camera import Camera
 import pygame as pg
-import pyrr.matrix44 as mat4
 import json
 from typing import TypedDict
 from typing import Any
 from pydoc import locate
-import classes.rendercomponent as rendercomponent
-import assets
 
 # Required to run on my Crostini Linux virtual machine
 import os
@@ -23,7 +20,6 @@ class App:
         self.width = width
         self.height = height
         self.FPS = FPS
-        self.camera_object = None
         self.renderer = Renderer(self.width, self.height)
         self.clock = pg.time.Clock()
         self.init_game_objects()
@@ -31,49 +27,28 @@ class App:
         self.main_loop()
         self.destroy()
 
-    def init_ui(self):
-        pass
-    
-    def main_loop(self):
-        running = True
-        self.delta_time = self.clock.tick(self.FPS) / 1000
-        while running:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    running = False
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        running = False
-            if len(self.game_objects) > 0:
-                self.renderer.view_matrix = self.camera_object.get_component(assets.scripts.playermove.PlayerMove).get_view_matrix()
-                self.update_game_objects()
-                self.renderer.render_objects(self.game_objects)
-            self.delta_time = self.clock.tick(self.FPS) / 1000
-
     def init_game_objects(self):
         self.game_objects = self.load_json("gameobjects.json")
         for game_object in self.game_objects:
             self.init_game_object(game_object)
-    
-    def init_game_object(self, game_object: GameObject):
-        if game_object.name == "camera":
-            self.camera_object = game_object
-        for component in game_object.components:
-            component.start()
-        game_object.render_component.model_matrix = rendercomponent.create_entire_model_matrix(game_object.local_transform, game_object.parent)
-        for child in game_object.children:
-            self.init_game_object(child)
 
-    def destroy(self):
-        for obj in self.game_objects:
-            obj.destroy()
-        pg.quit()
+    def load_json(self, path: str):
+        # Types
+        Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
+        TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
+        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str})
+        ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
+        ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
+        FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
 
-    def update_game_objects(self):
-        for game_object in self.game_objects:
-            for custom_object in game_object.components:
-                custom_object.delta_time = self.delta_time
-                custom_object.update()
+        game_objects: list[GameObject] = []
+
+        with open(path) as file:
+            json_dict: FileDict = json.load(file)
+
+        for game_object in json_dict["objects"]:
+            game_objects.append(self.create_game_object_from_json(game_object))
+        return game_objects
 
     """
     Takes in a game object json dictionary and returns a gameobject with the info from the json put in. Calls itself to create children
@@ -132,29 +107,60 @@ class App:
         )
         
         return game_object
+    
+    def init_game_object(self, game_object: GameObject):
+        for component in game_object.components:
+            component.start()
+        game_object.render_component.model_matrix = rendercomponent.create_entire_model_matrix(game_object.local_transform, game_object.parent)
+        for child in game_object.children:
+            self.init_game_object(child)
 
-    def load_json(self, path: str):
-        Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
-        TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
-        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str})
-        ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
-        ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
-        FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
+    def init_ui(self):
+        pass
+    
+    def main_loop(self):
+        running = True
+        self.delta_time = self.clock.tick(self.FPS) / 1000
+        while running:
+            # Events
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    running = False
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        running = False
 
-        game_objects: list[GameObject] = []
+            self.update_game_objects()
 
-        with open(path) as file:
-            json_dict: FileDict = json.load(file)
+            # Rendering
+            camera = None
+            for game_object in self.game_objects:
+                camera: Camera | None = self.get_camera(game_object)
+                if camera: break
+            self.renderer.render_texture_to_quad(camera.color_texture)
 
-        for game_object in json_dict["objects"]:
-            game_objects.append(self.create_game_object_from_json(game_object))
-        return game_objects
+            self.delta_time = self.clock.tick(self.FPS) / 1000
 
-    def search_game_objects(self, name: str):
+    def update_game_objects(self):
         for game_object in self.game_objects:
-            if game_object.name == name:
-                return game_object
-        return None
+            for custom_object in game_object.components:
+                custom_object.delta_time = self.delta_time
+                custom_object.update()
+
+    """
+    Returns the camera component of the gameobject / its children, if it exists
+    """
+    def get_camera(self, game_object: GameObject):
+        camera = game_object.get_component(Camera)
+        if not camera:
+            for child in game_object.children:
+                return self.get_camera(child)
+        return camera
+
+    def destroy(self):
+        for obj in self.game_objects:
+            obj.destroy()
+        pg.quit()
 
 if __name__ == "__main__":
     app = App(1920, 1080, 144)

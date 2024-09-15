@@ -80,7 +80,10 @@ def load_obj(file_path: str) -> np.ndarray:
 def create_model_matrix(transform: Transform) -> np.ndarray:
     model_matrix = mat4.create_identity(dtype=np.float32)
     model_matrix = mat4.multiply(model_matrix, mat4.create_from_scale(transform.scale.to_list(), dtype=np.float32))
-    model_matrix = mat4.multiply(model_matrix, mat4.create_from_eulers(transform.rotation.to_list(), dtype=np.float32))
+    model_matrix = mat4.multiply(model_matrix, mat4.create_from_axis_rotation([1, 0, 0], transform.rotation.x, dtype=np.float32))
+    model_matrix = mat4.multiply(model_matrix, mat4.create_from_axis_rotation([0, 0, 1], transform.rotation.y, dtype=np.float32))
+    model_matrix = mat4.multiply(model_matrix, mat4.create_from_axis_rotation([0, 1, 0], transform.rotation.z, dtype=np.float32))
+    # model_matrix = mat4.multiply(model_matrix, mat4.create_from_eulers(transform.rotation.to_list(), dtype=np.float32))
     model_matrix = mat4.multiply(model_matrix, mat4.create_from_translation(transform.pos.to_list(), dtype=np.float32))
     return model_matrix
 

@@ -1,11 +1,11 @@
 import pygame as pg
-from math import pi, cos, sin
+from math import pi, sin, cos, tan, radians
 from classes.vec3 import Vec3
 import pyrr.matrix44 as mat4
 import numpy as np
 
 class EditorCamera:
-    def __init__(self, speed: float, sens: float, width: int, height: int, viewport: tuple[int, int, int, int]) -> None:
+    def __init__(self, speed: float, sens: float, width: int, height: int, viewport: tuple[int, int, int, int], near_distance: float, far_distance: float, horizontal_fov_deg: float, aspect_ratio: float) -> None:
         self.speed = speed
         self.sens = sens
         self.width = width
@@ -16,6 +16,11 @@ class EditorCamera:
         self.prev_mouse_position = pg.mouse.get_pos()
         self.rotation = Vec3(0, 0, 0)
         self.viewport = viewport
+        self.near_distance = near_distance
+        self.far_distance = far_distance
+        self.horizontal_fov_deg = horizontal_fov_deg
+        self.aspect_ratio = aspect_ratio
+        self.projection_matrix = self.get_projection_matrix()
 
     def update(self, delta_time):
         self.rotate()
@@ -75,3 +80,19 @@ class EditorCamera:
         if usePosition:
             camera_matrix = mat4.multiply(camera_matrix, mat4.create_from_translation(self.pos.to_list()))
         return mat4.inverse(camera_matrix)
+    
+    def get_projection_matrix(self):
+        width = self.near_distance*tan(radians(self.horizontal_fov_deg / 2))
+        height = width / self.aspect_ratio
+
+        a = (self.near_distance + self.far_distance) / (self.far_distance - self.near_distance)
+        b = (-2 * self.far_distance * self.near_distance) / (self.far_distance - self.near_distance)
+
+        projection = np.array([
+            [self.near_distance / width, 0,                           0, 0],
+            [0,                          self.near_distance / height, 0, 0],
+            [0,                          0,                           a, b],
+            [0,                          0,                           1, 0]
+        ], dtype=np.float32)
+
+        return projection

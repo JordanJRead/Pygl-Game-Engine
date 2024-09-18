@@ -8,6 +8,9 @@ from classes.colors import Colors
 from classes.inspector import Inspector
 from classes.hierarchy import Hierarchy
 from OpenGL.GL import *
+from typing import TypedDict
+from typing import Any
+import json
 
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
@@ -15,6 +18,7 @@ class Editor(App):
 
     def init_ui(self):
         self.window_name = "Editor"
+        self.unsaved_window_name = "*Editor"
         pg.display.set_caption(self.window_name)
         self.viewport = (self.width//4, self.height//4, self.width//2, self.height//2)
         self.viewport_rect = pg.Rect(self.viewport[0], self.height - self.viewport[1] - self.viewport[3], self.viewport[2], self.viewport[3])
@@ -68,6 +72,8 @@ class Editor(App):
                     case pg.KEYDOWN:
                         if event.key == pg.K_ESCAPE:
                             running = False
+                        elif event.key == pg.K_s:
+                            self.save()
                     case pg.MOUSEBUTTONDOWN:
                         if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
                             self.camera.prev_mouse_position = pg.mouse.get_pos()
@@ -86,7 +92,7 @@ class Editor(App):
                             self.selected_game_object.name = event.text
                             self.hierarchy.game_objects = self.game_objects
                             self.hierarchy.build_buttons()
-                            pg.display.set_caption("*" + self.window_name)
+                            pg.display.set_caption(self.unsaved_window_name)
                 self.ui_manager.process_events(event)
             
             self.ui_manager.update(self.delta_time)
@@ -120,8 +126,62 @@ class Editor(App):
             self.delta_time = self.clock.tick(self.FPS) / 1000
 
     def save(self, path: str = "gameobjects.json"):
-        # with open(path, "r") as file:
-        pass
+        pg.display.set_caption(self.window_name)
+        # Types
+        Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
+        TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
+        RenderDict = TypedDict('RenderDict', {"obj_path": str, "image_path": str})
+        ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
+        ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
+        FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
+
+        game_object_dicts: list[ObjectDict] = []
+
+        for game_object in self.game_objects:
+            game_object_dicts.append(self.create_dict_from_game_object(game_object))
+
+        with open(path, "w") as file:
+            json.dump({"objects": game_object_dicts}, file)
+    
+    def create_dict_from_game_object(self, game_object: GameObject):
+        # Types
+        Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
+        TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
+        RenderDict = TypedDict('RenderDict', {"obj_path": str, "image_path": str})
+        ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
+        ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
+        FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
+
+        # Transform
+        transform_dict: TransformDict = {
+            "pos": {"x": game_object.local_transform.pos.x, "y": game_object.local_transform.pos.y, "z": game_object.local_transform.pos.z},
+            "rot": {"x": game_object.local_transform.rotation.x, "y": game_object.local_transform.rotation.y, "z": game_object.local_transform.rotation.z},
+            "scale": {"x": game_object.local_transform.scale.x, "y": game_object.local_transform.scale.y, "z": game_object.local_transform.scale.z}}
+
+        # Scripts
+        script_dict_list: list[ScriptDict] = []
+        for script in game_object.scripts:
+            script_dict: ScriptDict = {"name": script[0].__name__, "args": script[1]}
+            script_dict_list.append(script_dict)
+
+        # Children
+        child_dicts: list[ObjectDict] = []
+        for child in game_object.children:
+            child_dicts.append(self.create_dict_from_game_object(child))
+
+        # Render component
+        render_component_dict: RenderDict | None = None
+        if game_object.render_component.is_active:
+            render_component_dict = {"obj_path": game_object.render_component.obj_path, "image_path": game_object.render_component.image_path}
+
+        game_object_dict: ObjectDict = {}
+        game_object_dict["name"] = game_object.name
+        game_object_dict["transform"] = transform_dict
+        game_object_dict["children"] = child_dicts
+        game_object_dict["render_component"] = render_component_dict
+        game_object_dict["scripts"] = script_dict_list
+
+        return game_object_dict
 
 
 editor = Editor(1920, 1080, 144)

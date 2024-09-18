@@ -36,7 +36,7 @@ class App:
         # Types
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
         TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
-        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str})
+        RenderDict = TypedDict('RenderDict', {"obj_path": str, "image_path": str})
         ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
         ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
         FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
@@ -57,7 +57,7 @@ class App:
         # Types
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
         TransformDict = TypedDict('TransformDict', {"pos": Vec3Dict, "scale": Vec3Dict, "rot": Vec3Dict})
-        RenderDict = TypedDict('RenderDict', {"object_path": str, "image_path": str, "is_bright": int}) # Can be None
+        RenderDict = TypedDict('RenderDict', {"obj_path": str, "image_path": str, "is_bright": int}) # Can be None
         ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
         ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
 
@@ -77,9 +77,11 @@ class App:
             scripts.append((class_, arguments))
 
         # Render component
-        render_component: None | RenderComponent = None
+        render_component = None
         if game_object_dict["render_component"]:
-            render_component = RenderComponent(game_object_dict["render_component"]["object_path"], game_object_dict["render_component"]["image_path"])
+            render_component = RenderComponent(game_object_dict["render_component"]["obj_path"], game_object_dict["render_component"]["image_path"])
+        else:
+            render_component = RenderComponent("", "", False)
 
         game_object = GameObject(
             app=self,
@@ -105,7 +107,6 @@ class App:
             render_component= render_component,
             scripts=scripts,
         )
-        
         return game_object
     
     def init_game_object(self, game_object: GameObject):
@@ -137,7 +138,8 @@ class App:
             for game_object in self.game_objects:
                 camera: Camera | None = self.get_camera(game_object)
                 if camera: break
-            self.renderer.render_texture_to_quad(camera.color_texture)
+            if camera:
+                self.renderer.render_texture_to_quad(camera.color_texture)
 
             self.delta_time = self.clock.tick(self.FPS) / 1000
 

@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 class RenderComponent:
     def __init__(self, obj_path: str, image_path: str, active=True) -> None:
+        self.image_path = image_path
+        self.obj_path = obj_path
         self.is_active = active
         self.is_bright = False
         self.model_matrix = mat4.create_identity()

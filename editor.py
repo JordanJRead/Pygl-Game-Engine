@@ -1,12 +1,10 @@
 from main import App
 import pygame as pg
 import pygame_gui as pgui
-import pyrr.matrix44 as mat4
 from classes.gameobject import GameObject
 from classes.editorcamera import EditorCamera
 from classes.colors import Colors
-from classes.inspector import Inspector
-from classes.hierarchy import Hierarchy
+from classes.editor_items import *
 from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
@@ -41,60 +39,47 @@ class Editor(App):
         self.ui_manager = pgui.UIManager((self.width, self.height), "theme.json")
 
         # Hierarchy
-        hierarchy_rect = pg.Rect(40, 40, self.width / 6.4, self.height - 75)
+        hierarchy_rect = pg.Rect(50, 80, self.width / 6.4, self.height - 90)
         self.hierarchy =  Hierarchy(hierarchy_rect, self.ui_manager, self.game_objects)
 
         # Inspector
         inspector_rect = pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height -75)
         self.inspector = Inspector(inspector_rect, self.ui_manager)
 
+        # Create buttons
+        self.creation_buttons = CreationButtons(self.hierarchy.rect, self.ui_manager)
+
     def select_game_object(self, game_object: GameObject):
+        self.inspector.set_game_object(game_object)
+
+        # Disable
         if self.selected_game_object:
             self.selected_game_object.render_component.is_bright = False
 
+        # Deselect
         if self.selected_game_object == game_object:
+            self.creation_buttons.disable_child_button()
             self.selected_game_object = None
             self.inspector.set_game_object(None)
+            self.hierarchy.build_buttons(None)
             return
-        self.inspector.set_game_object(game_object)
+
+        # Set new
+        self.creation_buttons.enable_child_button()
         self.selected_game_object = game_object
         game_object.render_component.is_bright = True
+        self.hierarchy.build_buttons(self.selected_game_object)
 
     def main_loop(self):
-        running = True
+        self.running = True
         self.delta_time = self.clock.tick(self.FPS) / 1000
-        while running:
-            # Events
-            for event in pg.event.get():
-                match event.type:
-                    case pg.QUIT:
-                        running = False
-                    case pg.KEYDOWN:
-                        if event.key == pg.K_ESCAPE:
-                            running = False
-                        elif event.key == pg.K_s:
-                            self.save()
-                    case pg.MOUSEBUTTONDOWN:
-                        if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
-                            self.camera.prev_mouse_position = pg.mouse.get_pos()
-                            self.is_moving = True
-                    case pg.MOUSEBUTTONUP:
-                        if event.button == 3:
-                            self.is_moving = False
-                    case pgui.UI_BUTTON_PRESSED:
-                        for button in self.hierarchy.game_object_buttons:
-                            if event.ui_element == button:
-                                self.select_game_object(self.hierarchy.game_object_buttons[button])
-                    
-                    # Change game object name
-                    case pgui.UI_TEXT_ENTRY_FINISHED:
-                        if event.ui_object_id == "panel." + self.inspector.ui_id:
-                            self.selected_game_object.name = event.text
-                            self.hierarchy.game_objects = self.game_objects
-                            self.hierarchy.build_buttons()
-                            pg.display.set_caption(self.unsaved_window_name)
-                self.ui_manager.process_events(event)
-            
+        while self.running:
+            self.check_events()
+
+            keys = pg.key.get_pressed()
+            if keys[pg.K_s] and keys[pg.K_LCTRL]:
+                self.save()
+
             self.ui_manager.update(self.delta_time)
             self.ui_manager.rebuild_all_from_changed_theme_data()
 
@@ -125,6 +110,59 @@ class Editor(App):
                 self.camera.update(self.delta_time)
             self.delta_time = self.clock.tick(self.FPS) / 1000
 
+    def check_events(self):
+        for event in pg.event.get():
+            match event.type:
+                case pg.QUIT:
+                    self.running = False
+                case pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self.running = False
+                case pg.MOUSEBUTTONDOWN:
+                    if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
+                        self.camera.prev_mouse_position = pg.mouse.get_pos()
+                        self.is_moving = True
+                case pg.MOUSEBUTTONUP:
+                    if event.button == 3:
+                        self.is_moving = False
+                case pgui.UI_BUTTON_PRESSED:
+                    for button in self.hierarchy.game_object_buttons:
+                        if event.ui_element == button:
+                            self.select_game_object(self.hierarchy.game_object_buttons[button])
+                            break
+                    match event.ui_element:
+                        # Create
+                        case self.creation_buttons.create_top_level_button:
+                            new_object = GameObject(self, "New Object")
+                            self.game_objects.append(new_object)
+                            self.select_game_object(new_object)
+                            self.hierarchy.build_buttons(self.selected_game_object)
+                        
+                        # Create child
+                        # FIXME recursion error???
+                        case self.creation_buttons.child_button:
+                            if self.selected_game_object:
+                                new_object = GameObject(self, "New Child Object")
+                                self.selected_game_object.add_child(new_object, 0)
+                                self.select_game_object(new_object)
+                                self.hierarchy.build_buttons(self.selected_game_object)
+
+                        case self.inspector.delete_button:
+                            if self.selected_game_object:
+                                game_object_to_destroy = self.selected_game_object
+                                self.select_game_object(self.selected_game_object)
+                                game_object_to_destroy.destroy()
+                                self.hierarchy.build_buttons()
+                
+                # Change game object name
+                case pgui.UI_TEXT_ENTRY_FINISHED:
+                    if event.ui_object_id == "panel." + self.inspector.ui_id:
+                        self.selected_game_object.name = event.text
+                        self.hierarchy.game_objects = self.game_objects
+                        self.hierarchy.build_buttons(self.select_game_object)
+                        pg.display.set_caption(self.unsaved_window_name)
+            self.ui_manager.process_events(event)
+
     def save(self, path: str = "gameobjects.json"):
         pg.display.set_caption(self.window_name)
         # Types
@@ -141,7 +179,7 @@ class Editor(App):
             game_object_dicts.append(self.create_dict_from_game_object(game_object))
 
         with open(path, "w") as file:
-            json.dump({"objects": game_object_dicts}, file)
+            json.dump({"objects": game_object_dicts}, file, indent=2)
     
     def create_dict_from_game_object(self, game_object: GameObject):
         # Types

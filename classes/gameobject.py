@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 # Scripts is a list of (classtype, arguments)
 class GameObject:
     def __init__(self, app: App, name: str, local_transform: Transform = Transform.zero(), children: list[GameObject] = [], render_component: RenderComponent = None, scripts: list[tuple[any, list[any]]] = []) -> None:
-        self.parent = None
+        self.parent: GameObject | None = None
         self.app = app
         self.children = children
         self.name = name
@@ -29,10 +29,16 @@ class GameObject:
             
     
     def destroy(self):
+        if self.parent:
+            self.parent.children.remove(self)
         if self.render_component:
             self.render_component.destroy()
         for custom_object in self.components:
             custom_object.end()
+        for child in self.children:
+            child.destroy()
+        if self in self.app.game_objects:
+            self.app.game_objects.remove(self)
     
     def update_transform(self, transform: Transform):
         self.local_transform = transform
@@ -43,3 +49,10 @@ class GameObject:
         for component in self.components:
             if type(component) == wanted_type:
                 return component
+    
+    def add_child(self, child: GameObject, index: int | None = None):
+        if index == None:
+            self.children.append(child)
+        else:
+            self.children.insert(index, child)
+        child.parent = self

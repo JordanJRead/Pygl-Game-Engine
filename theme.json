@@ -2,7 +2,7 @@
     "button": {
         "colours": {
             "normal_bg":"rgb(138,99,64), rgb(97,69,44), 270",
-            "hovered_bg":"rgb(78,45,24), rgb(55,31,17), 270",
+            "hovered_bg":"rgb(98,65,44), rgb(75,51,37), 270",
             "disabled_bg":"#25292e",
             "selected_bg":"#193754",
             "dark_bg":"#15191e",
@@ -21,6 +21,86 @@
             "active_border": "#8080B0",
             "filled_bar":"#f4251b",
             "unfilled_bar":"#CCCCCC"
+        }
+    },
+    
+    "@grey_button": {
+        "colours": {
+            "normal_bg":"rgb(60,60,60), rgb(50,50,50), 270",
+            "hovered_bg":"rgb(60,60,60), rgb(50,50,50), 270",
+            "disabled_bg":"rgb(60,60,60), rgb(50,50,50), 270",
+            "selected_bg":"rgb(60,60,60), rgb(50,50,50), 270",
+            "dark_bg":"rgb(60,60,60), rgb(50,50,50), 270",
+            "normal_text":"rgb(0, 0, 0)",
+            "hovered_text":"rgb(0, 0, 0)",
+            "selected_text":"rgb(0, 0, 0)",
+            "disabled_text":"rgb(0, 0, 0)",
+            "link_text": "rgb(0, 0, 0)",
+            "link_hover": "rgb(0, 0, 0)",
+            "link_selected": "rgb(0, 0, 0)",
+            "text_shadow": "rgb(0, 0, 0)",
+            "normal_border": "rgb(0, 0, 0)",
+            "hovered_border": "rgb(0, 0, 0)",
+            "disabled_border": "rgb(0, 0, 0)",
+            "selected_border": "rgb(0, 0, 0)",
+            "active_border": "rgb(0, 0, 0)",
+            "filled_bar":"rgb(0, 0, 0)",
+            "unfilled_bar":"rgb(0, 0, 0)"
+        }
+    },
+    
+    "@bright_button": {
+        "colours": {
+            "normal_bg":"rgb(188,149,114), rgb(138,99,64), 270",
+            "hovered_bg":"rgb(118,85,64), rgb(95,71,57), 270",
+            "disabled_bg":"#25292e",
+            "selected_bg":"#193754",
+            "dark_bg":"#15191e",
+            "normal_text":"rgb(17, 25, 15)",
+            "hovered_text":"#FFFFFF",
+            "selected_text":"#FFFFFF",
+            "disabled_text":"#6d736f",
+            "link_text": "#0000EE",
+            "link_hover": "#2020FF",
+            "link_selected": "#551A8B",
+            "text_shadow": "#777777",
+            "normal_border": "rgb(78,45,24)",
+            "hovered_border": "rgb(138,99,64)",
+            "disabled_border": "#808080",
+            "selected_border": "#8080B0",
+            "active_border": "#8080B0",
+            "filled_bar":"#f4251b",
+            "unfilled_bar":"#CCCCCC"
+        }
+    },
+
+    "@delete_button": {
+        "colours": {
+            "normal_bg":"rgb(220,20,20), rgb(190,5,5), 270",
+            "hovered_bg":"rgb(118,85,64), rgb(95,71,57), 270",
+            "disabled_bg":"#25292e",
+            "selected_bg":"#193754",
+            "dark_bg":"#15191e",
+            "normal_text":"rgb(17, 25, 15)",
+            "hovered_text":"#FFFFFF",
+            "selected_text":"#FFFFFF",
+            "disabled_text":"#6d736f",
+            "link_text": "#0000EE",
+            "link_hover": "#2020FF",
+            "link_selected": "#551A8B",
+            "text_shadow": "#777777",
+            "normal_border": "rgb(78,45,24)",
+            "hovered_border": "rgb(138,99,64)",
+            "disabled_border": "#808080",
+            "selected_border": "#8080B0",
+            "active_border": "#8080B0",
+            "filled_bar":"#f4251b",
+            "unfilled_bar":"#CCCCCC"
+        },
+        "images": {
+            "normal_image": {
+                "path": "editorassets/images/delete.png"
+            }
         }
     },
 

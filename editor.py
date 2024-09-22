@@ -136,7 +136,6 @@ class Editor(App):
                             new_object = GameObject(self, "New Object")
                             self.game_objects.append(new_object)
                             self.select_game_object(new_object)
-                            self.hierarchy.build_buttons(self.selected_game_object)
                         
                         # Create child
                         # FIXME recursion error???
@@ -145,7 +144,6 @@ class Editor(App):
                                 new_object = GameObject(self, "New Child Object")
                                 self.selected_game_object.add_child(new_object, 0)
                                 self.select_game_object(new_object)
-                                self.hierarchy.build_buttons(self.selected_game_object)
 
                         case self.inspector.delete_button:
                             if self.selected_game_object:

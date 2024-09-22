@@ -9,7 +9,11 @@ if TYPE_CHECKING:
 
 # Scripts is a list of (classtype, arguments)
 class GameObject:
-    def __init__(self, app: App, name: str, local_transform: Transform = Transform.zero(), children: list[GameObject] = [], render_component: RenderComponent = None, scripts: list[tuple[any, list[any]]] = []) -> None:
+    def __init__(self, app: App, name: str, local_transform: Transform = Transform.zero(), children: list[GameObject] = None, render_component: RenderComponent = None, scripts: list[tuple[any, list[any]]] = None) -> None:
+        if children is None:
+            children = []
+        if scripts is None:
+            scripts = []
         self.parent: GameObject | None = None
         self.app = app
         self.children = children

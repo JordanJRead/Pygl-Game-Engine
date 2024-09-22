@@ -55,6 +55,8 @@ class GameObject:
                 return component
     
     def add_child(self, child: GameObject, index: int | None = None):
+        if child.parent:
+            child.parent.children.remove(child)
         if index == None:
             self.children.append(child)
         else:

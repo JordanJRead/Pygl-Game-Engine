@@ -128,7 +128,13 @@ class Editor(App):
                 case pgui.UI_BUTTON_PRESSED:
                     for button in self.hierarchy.game_object_buttons:
                         if event.ui_element == button:
-                            self.select_game_object(self.hierarchy.game_object_buttons[button])
+                            if self.inspector.moving:
+                                new_parent = self.hierarchy.game_object_buttons[button]
+                                new_parent.add_child(self.selected_game_object, 0)
+                                self.hierarchy.build_buttons()
+                                self.inspector.toggle_move_button()
+                            else:
+                                self.select_game_object(self.hierarchy.game_object_buttons[button])
                             break
                     match event.ui_element:
                         # Create
@@ -138,7 +144,6 @@ class Editor(App):
                             self.select_game_object(new_object)
                         
                         # Create child
-                        # FIXME recursion error???
                         case self.creation_buttons.child_button:
                             if self.selected_game_object:
                                 new_object = GameObject(self, "New Child Object")
@@ -151,6 +156,9 @@ class Editor(App):
                                 self.select_game_object(self.selected_game_object)
                                 game_object_to_destroy.destroy()
                                 self.hierarchy.build_buttons()
+
+                        case self.inspector.move_button:
+                            self.inspector.toggle_move_button()
                 
                 # Change game object name
                 case pgui.UI_TEXT_ENTRY_FINISHED:
@@ -219,5 +227,5 @@ class Editor(App):
 
         return game_object_dict
 
-
-editor = Editor(1920, 1080, 144)
+if __name__ == "__main__":
+    editor = Editor(1920, 1080, 144)

@@ -113,11 +113,15 @@ class Editor(App):
     def check_events(self):
         for event in pg.event.get():
             match event.type:
+
+                # Closing
                 case pg.QUIT:
                     self.running = False
                 case pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         self.running = False
+
+                # Move in scene
                 case pg.MOUSEBUTTONDOWN:
                     if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
                         self.camera.prev_mouse_position = pg.mouse.get_pos()
@@ -125,23 +129,32 @@ class Editor(App):
                 case pg.MOUSEBUTTONUP:
                     if event.button == 3:
                         self.is_moving = False
+
+                # Buttons
                 case pgui.UI_BUTTON_PRESSED:
+
+                    # Hierarchy
                     for button in self.hierarchy.game_object_buttons:
                         if event.ui_element == button:
-                            if self.inspector.moving:
+                            # Move object in hierarchy to clicked on object
+                            if self.hierarchy.moving:
                                 new_parent = self.hierarchy.game_object_buttons[button]
                                 new_parent.add_child(self.selected_game_object, 0)
-                                self.hierarchy.build_buttons()
-                                self.inspector.toggle_move_button()
+                                self.hierarchy.build_buttons(self.selected_game_object)
+                                self.hierarchy.toggle_move_button()
+                                pg.display.set_caption(self.unsaved_window_name)
                             else:
                                 self.select_game_object(self.hierarchy.game_object_buttons[button])
                             break
+                    
                     match event.ui_element:
-                        # Create
+
+                        # Create object
                         case self.creation_buttons.create_top_level_button:
                             new_object = GameObject(self, "New Object")
                             self.game_objects.append(new_object)
                             self.select_game_object(new_object)
+                            pg.display.set_caption(self.unsaved_window_name)
                         
                         # Create child
                         case self.creation_buttons.child_button:
@@ -149,16 +162,20 @@ class Editor(App):
                                 new_object = GameObject(self, "New Child Object")
                                 self.selected_game_object.add_child(new_object, 0)
                                 self.select_game_object(new_object)
+                                pg.display.set_caption(self.unsaved_window_name)
 
+                        # Delete object
                         case self.inspector.delete_button:
                             if self.selected_game_object:
                                 game_object_to_destroy = self.selected_game_object
                                 self.select_game_object(self.selected_game_object)
                                 game_object_to_destroy.destroy()
                                 self.hierarchy.build_buttons()
+                                pg.display.set_caption(self.unsaved_window_name)
 
-                        case self.inspector.move_button:
-                            self.inspector.toggle_move_button()
+                        # Toggle moving
+                        case self.hierarchy.move_button:
+                            self.hierarchy.toggle_move_button()
                 
                 # Change game object name
                 case pgui.UI_TEXT_ENTRY_FINISHED:

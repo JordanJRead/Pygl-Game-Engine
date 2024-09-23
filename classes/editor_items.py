@@ -2,9 +2,6 @@ from __future__ import annotations
 import pygame as pg
 import pygame_gui as pgui
 from classes.gameobject import GameObject
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from main import App
 
 class Hierarchy:
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_objects: list[GameObject]) -> None:
@@ -13,7 +10,10 @@ class Hierarchy:
         self.ui_manager = ui_manager
         self.game_objects = game_objects
         self.game_object_buttons: dict[pgui.core.UIElement, GameObject] = {}
+        self.moving = False
+        self.move_button: pgui.elements.UIButton | None = None
         self.build_buttons(None)
+
     
     def build_buttons(self, selected_object: GameObject | None = None):
         self.kill_buttons()
@@ -31,7 +31,9 @@ class Hierarchy:
         y = top_margin + size * self.y_depth
 
         if selected_object == game_object:
-            self.game_object_buttons[pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.panel, object_id="@bright_button")] = game_object
+            selected_button = pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.panel, object_id="@bright_button")
+            self.game_object_buttons[selected_button] = game_object
+            self.move_button = pgui.elements.UIButton(pg.Rect(x + 100 + 10, y, 50, 50), "", self.ui_manager, self.panel, object_id="@move_button")
         else:
             self.game_object_buttons[pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.panel)] = game_object
 
@@ -42,6 +44,15 @@ class Hierarchy:
     def kill_buttons(self):
         for button in self.game_object_buttons:
             button.kill()
+        if self.move_button:
+            self.move_button.kill()
+
+    def toggle_move_button(self):
+        if not self.moving:
+            self.move_button.change_object_id("@move_button_dark")
+        else:
+            self.move_button.change_object_id("@move_button")
+        self.moving = not self.moving
 
 class Inspector:
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_object: GameObject | None = None) -> None:
@@ -49,7 +60,6 @@ class Inspector:
         self.game_object = game_object
         self.ui_manager = ui_manager
         self.rect = rect
-        self.moving = False
         self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
         self.name_input: pgui.elements.UITextEntryLine | None = None
 
@@ -57,11 +67,6 @@ class Inspector:
         delete_button_size = 50
         delete_button_padding = 10
         self.delete_button_rect = pg.Rect(self.panel.relative_rect.width - delete_button_padding - delete_button_size, delete_button_padding, delete_button_size, delete_button_size)
-
-        self.move_button: pgui.elements.UIButton | None = None
-        move_button_size = 50
-        move_button_padding = 10
-        self.move_button_rect = pg.Rect(move_button_padding, move_button_padding, move_button_size, move_button_size)
 
     def set_game_object(self, game_object: GameObject | None):
         self.destroy()
@@ -73,20 +78,11 @@ class Inspector:
                 self.name_input.kill()
                 self.name_input = None
                 self.delete_button.kill()
-                self.move_button.kill()
 
     def create(self):
         if self.game_object:
             self.name_input = pgui.elements.UITextEntryLine(pg.Rect(0, 40, 100, 50), self.ui_manager, anchors={"centerx": "centerx"}, placeholder_text=self.game_object.name, object_id=self.ui_id, container=self.panel)
             self.delete_button = pgui.elements.UIButton(self.delete_button_rect, "", self.ui_manager, object_id="@delete_button", container=self.panel)
-            self.move_button = pgui.elements.UIButton(self.move_button_rect, "", self.ui_manager, object_id="@move_button", container=self.panel)
-    
-    def toggle_move_button(self):
-        if not self.moving:
-            self.move_button.change_object_id("@move_button_dark")
-        else:
-            self.move_button.change_object_id("@move_button")
-        self.moving = not self.moving
 
 class CreationButtons:
     def __init__(self, bottom_rect: pg.Rect, ui_manager: pgui.UIManager) -> None:

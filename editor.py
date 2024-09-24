@@ -139,9 +139,12 @@ class Editor(App):
                             # Move object in hierarchy to clicked on object
                             if self.hierarchy.moving:
                                 new_parent = self.hierarchy.game_object_buttons[button]
-                                new_parent.add_child(self.selected_game_object, 0)
-                                self.hierarchy.build_buttons(self.selected_game_object)
-                                self.hierarchy.toggle_move_button()
+                                if new_parent in self.selected_game_object.children: # Swap parent and child (not implemented)
+                                    pass
+                                else:
+                                    new_parent.add_child(self.selected_game_object, 0)
+                                    self.hierarchy.build_buttons(self.selected_game_object)
+                                    self.hierarchy.toggle_move_button()
                                 pg.display.set_caption(self.unsaved_window_name)
                             else:
                                 self.select_game_object(self.hierarchy.game_object_buttons[button])

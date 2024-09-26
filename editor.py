@@ -3,8 +3,10 @@ import pygame as pg
 import pygame_gui as pgui
 from classes.gameobject import GameObject
 from classes.editorcamera import EditorCamera
+from classes.transform import Transform
 from classes.colors import Colors
 from classes.editor_items import *
+from classes.vec3 import Vec3
 from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
@@ -43,7 +45,7 @@ class Editor(App):
         self.hierarchy =  Hierarchy(hierarchy_rect, self.ui_manager, self.game_objects)
 
         # Inspector
-        inspector_rect = pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height -75)
+        inspector_rect = pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height - 75)
         self.inspector = Inspector(inspector_rect, self.ui_manager)
 
         # Create buttons
@@ -182,11 +184,18 @@ class Editor(App):
                 
                 # Change game object name
                 case pgui.UI_TEXT_ENTRY_FINISHED:
-                    if event.ui_object_id == "panel." + self.inspector.ui_id:
+                    if event.ui_element == self.inspector.name_input:
                         self.selected_game_object.name = event.text
                         self.hierarchy.game_objects = self.game_objects
                         self.hierarchy.build_buttons(self.select_game_object)
                         pg.display.set_caption(self.unsaved_window_name)
+                    # Update transform
+                    elif event.ui_element in self.inspector.transform_inputs:
+                        self.selected_game_object.update_transform(Transform(
+                            Vec3(float(self.inspector.transform_inputs[0].text), float(self.inspector.transform_inputs[1].text), float(self.inspector.transform_inputs[2].text)),
+                            self.selected_game_object.local_transform.scale,
+                            self.selected_game_object.local_transform.rotation))
+
             self.ui_manager.process_events(event)
 
     def save(self, path: str = "gameobjects.json"):

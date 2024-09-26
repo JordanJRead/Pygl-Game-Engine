@@ -145,7 +145,14 @@
     "panel": {
         "colours": {
             "normal_border": "rgb(6, 8, 5)",
-            "dark_bg":"rgb(76,100,68), rgb(53,70,48), 270"
+            "dark_bg": "rgb(76,100,68), rgb(53,70,48), 270"
+        }
+    },
+
+    "@dark_panel": {
+        "colours": {
+            "normal_border": "rgb(3, 4, 2)",
+            "dark_bg": "rgb(56, 80, 48), rgb(38, 55, 33), 270"
         }
     }
 }

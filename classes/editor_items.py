@@ -56,7 +56,6 @@ class Hierarchy:
 
 class Inspector:
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_object: GameObject | None = None) -> None:
-        self.ui_id = "#inspector_name"
         self.game_object = game_object
         self.ui_manager = ui_manager
         self.rect = rect
@@ -68,6 +67,18 @@ class Inspector:
         delete_button_padding = 10
         self.delete_button_rect = pg.Rect(self.panel.relative_rect.width - delete_button_padding - delete_button_size, delete_button_padding, delete_button_size, delete_button_size)
 
+        self.transform_panel_rect = pg.Rect(
+            self.panel.rect.width * 0.05,
+            self.panel.rect.height * 0.08,
+            self.panel.rect.width * 0.9,
+            self.panel.rect.height * 0.97
+            )
+        
+        self.transform_panel = pgui.elements.UIPanel(self.transform_panel_rect, manager=self.ui_manager, object_id="@dark_panel", container=self.panel)
+
+        self.transform_inputs: None | list[pgui.elements.UITextEntryLine] = None
+        self.transform_input_rect = pg.Rect(0, 0, self.rect.width / 4, 50)
+
     def set_game_object(self, game_object: GameObject | None):
         self.destroy()
         self.game_object = game_object
@@ -77,11 +88,49 @@ class Inspector:
             if not self.game_object is None:
                 self.name_input.kill()
                 self.name_input = None
+                [x.kill() for x in self.transform_inputs]
+                self.transform_inputs = None
                 self.delete_button.kill()
 
     def create(self):
         if self.game_object:
-            self.name_input = pgui.elements.UITextEntryLine(pg.Rect(0, 40, 100, 50), self.ui_manager, anchors={"centerx": "centerx"}, placeholder_text=self.game_object.name, object_id=self.ui_id, container=self.panel)
+            self.name_input = pgui.elements.UITextEntryLine(pg.Rect(0, 40, 100, 50), self.ui_manager, anchors={"centerx": "centerx"}, placeholder_text=self.game_object.name, container=self.panel)
+
+            x_gap = self.panel.rect.width / 16
+            self.transform_inputs = [
+                pgui.elements.UITextEntryLine(
+                    pg.Rect(
+                        x_gap,
+                        100,
+                        *self.transform_input_rect.size
+                        ),
+                    self.ui_manager,
+                    placeholder_text=str(self.game_object.local_transform.pos.x),
+                    container=self.transform_panel,
+                    initial_text=str(self.game_object.local_transform.pos.x)),
+                    
+                pgui.elements.UITextEntryLine(
+                    pg.Rect(
+                        x_gap * 2 + self.transform_input_rect.width,
+                        100,
+                        *self.transform_input_rect.size
+                        ),
+                    self.ui_manager,
+                    placeholder_text=str(self.game_object.local_transform.pos.y),
+                    container=self.transform_panel,
+                    initial_text=str(self.game_object.local_transform.pos.y)),
+
+                pgui.elements.UITextEntryLine(
+                    pg.Rect(
+                        x_gap * 3 + 2 * self.transform_input_rect.width,
+                        100,
+                        *self.transform_input_rect.size
+                        ),
+                    self.ui_manager,
+                    placeholder_text=str(self.game_object.local_transform.pos.z),
+                    container=self.transform_panel,
+                    initial_text=str(self.game_object.local_transform.pos.z))
+            ]
             self.delete_button = pgui.elements.UIButton(self.delete_button_rect, "", self.ui_manager, object_id="@delete_button", container=self.panel)
 
 class CreationButtons:

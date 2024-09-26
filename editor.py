@@ -189,12 +189,15 @@ class Editor(App):
                         self.hierarchy.game_objects = self.game_objects
                         self.hierarchy.build_buttons(self.select_game_object)
                         pg.display.set_caption(self.unsaved_window_name)
-                    # Update transform
-                    elif event.ui_element in self.inspector.transform_inputs:
-                        self.selected_game_object.update_transform(Transform(
-                            Vec3(float(self.inspector.transform_inputs[0].text), float(self.inspector.transform_inputs[1].text), float(self.inspector.transform_inputs[2].text)),
-                            self.selected_game_object.local_transform.scale,
-                            self.selected_game_object.local_transform.rotation))
+
+                    # Set value in inspector
+                    else:
+                        for input_panel in self.inspector.input_panels:
+                            for row in input_panel.rows:
+                                for input_field in row:
+                                    if event.ui_element == input_field:
+                                        input_panel.function(self.inspector.game_object, input_panel.rows)
+                                        break
 
             self.ui_manager.process_events(event)
 

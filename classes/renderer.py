@@ -74,7 +74,7 @@ class Renderer:
 
     def render_object(self, object: GameObject):
             if object.render_component.is_active:
-                glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, object.render_component.model_matrix)
+                glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, object.local_transform.model_matrix)
                 glUniform1i(glGetUniformLocation(self.shader, "isBright"), object.render_component.is_bright)
                 object.render_component.texture2d.use()
                 glBindVertexArray(object.render_component.vao)

@@ -3,7 +3,7 @@ from classes.transform import Transform
 from classes.rendercomponent import RenderComponent
 from classes.vec3 import Vec3
 from classes.renderer import Renderer
-import classes.rendercomponent as rendercomponent
+import classes.transform as transform
 from assets.scripts.camera import Camera
 import pygame as pg
 import json
@@ -112,7 +112,7 @@ class App:
     def init_game_object(self, game_object: GameObject):
         for component in game_object.components:
             component.start()
-        game_object.render_component.model_matrix = rendercomponent.create_entire_model_matrix(game_object.local_transform, game_object.parent)
+        game_object.local_transform.model_matrix = transform.create_entire_model_matrix(game_object.local_transform, game_object.parent)
         for child in game_object.children:
             self.init_game_object(child)
 

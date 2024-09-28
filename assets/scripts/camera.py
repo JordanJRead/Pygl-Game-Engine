@@ -42,7 +42,7 @@ class Camera(MonoBehaviour):
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, self.depth_texture, 0)
 
     def update(self):
-        self.app.renderer.render_objects_to_fbo(self.app.game_objects, self.projection_matrix, mat4.inverse(self.game_object.render_component.model_matrix), self.fbo, flip=False)
+        self.app.renderer.render_objects_to_fbo(self.app.game_objects, self.projection_matrix, mat4.inverse(self.game_object.local_transform.model_matrix), self.fbo, flip=False)
 
     def end(self):
         glDeleteFramebuffers(1, (self.fbo,))

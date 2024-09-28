@@ -1,7 +1,7 @@
 from __future__ import annotations
 from classes.transform import Transform
 from classes.rendercomponent import RenderComponent
-import classes.rendercomponent as rendercomponent
+import classes.transform as transform
 from classes.monobehaviour import MonoBehaviour
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -44,10 +44,10 @@ class GameObject:
         if self in self.app.game_objects:
             self.app.game_objects.remove(self)
     
-    def update_transform(self, transform: Transform):
-        self.local_transform = transform
+    def update_transform(self, new_transform: Transform):
+        self.local_transform = new_transform
         if self.render_component:
-            self.render_component.model_matrix = rendercomponent.create_entire_model_matrix(self.local_transform, self.parent)
+            self.local_transform.model_matrix = transform.create_entire_model_matrix(self.local_transform, self.parent)
         
     def get_component(self, wanted_type):
         for component in self.components:

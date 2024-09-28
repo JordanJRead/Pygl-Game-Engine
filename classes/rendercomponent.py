@@ -1,12 +1,7 @@
 from __future__ import annotations
 from classes.texture import Texture2D
-import pyrr.matrix44 as mat4
-from classes.transform import Transform
 import numpy as np
 from OpenGL.GL import *
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from classes.gameobject import GameObject
 
 class RenderComponent:
     def __init__(self, obj_path: str, image_path: str, active=True) -> None:
@@ -14,7 +9,6 @@ class RenderComponent:
         self.obj_path = obj_path
         self.is_active = active
         self.is_bright = False
-        self.model_matrix = mat4.create_identity()
         if active:
             self.vertices = load_obj(obj_path)
 
@@ -78,22 +72,3 @@ def load_obj(file_path: str) -> np.ndarray:
                 vertices.extend([int(num) for num in uv])
         
         return np.array(vertices, dtype=np.float32)
-
-def create_model_matrix(transform: Transform) -> np.ndarray:
-    model_matrix = mat4.create_identity(dtype=np.float32)
-    model_matrix = mat4.multiply(model_matrix, mat4.create_from_scale(transform.scale.to_list(), dtype=np.float32))
-    model_matrix = mat4.multiply(model_matrix, mat4.create_from_axis_rotation([1, 0, 0], transform.rotation.x, dtype=np.float32))
-    model_matrix = mat4.multiply(model_matrix, mat4.create_from_axis_rotation([0, 0, 1], transform.rotation.y, dtype=np.float32))
-    model_matrix = mat4.multiply(model_matrix, mat4.create_from_axis_rotation([0, 1, 0], transform.rotation.z, dtype=np.float32))
-    # model_matrix = mat4.multiply(model_matrix, mat4.create_from_eulers(transform.rotation.to_list(), dtype=np.float32))
-    model_matrix = mat4.multiply(model_matrix, mat4.create_from_translation(transform.pos.to_list(), dtype=np.float32))
-    return model_matrix
-
-def create_entire_model_matrix(transform: Transform, parent: None | GameObject = None, passed_model_matrix = None) -> np.ndarray:
-    model_matrix = mat4.create_identity()
-    if type(passed_model_matrix) != type(None):
-        model_matrix = passed_model_matrix
-    model_matrix = mat4.multiply(model_matrix, create_model_matrix(transform))
-    if parent:
-        return create_entire_model_matrix(parent.local_transform, parent.parent, model_matrix)
-    return model_matrix

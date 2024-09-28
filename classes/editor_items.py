@@ -6,7 +6,7 @@ from classes.transform import Transform
 from classes.vec3 import Vec3
 
 class InputPanel:
-    def __init__(self, rect: pg.Rect, button_size: tuple[float, float], row_count: int, row_size: int, default_values: list, function: function, container: pgui.core.IContainerLikeInterface, ui_manager: pgui.UIManager, x_padding = 10, y_padding = 70) -> None:
+    def __init__(self, rect: pg.Rect, button_size: tuple[float, float], row_count: int, row_size: int, default_values: list, function: function, container: pgui.core.IContainerLikeInterface, ui_manager: pgui.UIManager, x_padding = 10, y_padding = 70, row_labels: list[str] = [""], item_labels: list[list[str]] = [[""]]) -> None:
         self.rect = rect
         self.button_size = button_size
         self.row_count = row_count
@@ -19,6 +19,7 @@ class InputPanel:
 
         for row_num in range(self.row_count):
             row = []
+            # pgui.elements.UILabel(pg.Rect()) # TODO                                       
             for col_num in range(self.row_size):
                 index = col_num + self.row_count * row_num
                 row.append(pgui.elements.UITextEntryLine(
@@ -43,19 +44,24 @@ class InputPanel:
 
 class Hierarchy:
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_objects: list[GameObject]) -> None:
-        self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
+        self.panel = pgui.elements.UIScrollingContainer(rect, ui_manager, object_id="@scroll_panel")
+        # self.panel = pgui.elements.UIPanel(rect, manager=ui_manager, object_id="@scroll_panel")
         self.rect = rect
         self.ui_manager = ui_manager
         self.game_objects = game_objects
         self.game_object_buttons: dict[pgui.core.UIElement, GameObject] = {}
         self.moving = False
         self.move_button: pgui.elements.UIButton | None = None
+        self.largest_x = 0
+        self.largest_y = 0
         self.build_buttons(None)
 
     
     def build_buttons(self, selected_object: GameObject | None = None):
         self.kill_buttons()
         self.y_depth = 0
+        self.largest_x = 0
+        self.largest_y = 0
         for game_object in self.game_objects:
             self.create_buttons(game_object, selected_object)
 
@@ -68,6 +74,11 @@ class Hierarchy:
         x = left_margin + depth_offset * x_depth
         y = top_margin + size * self.y_depth
 
+        if x > self.largest_x:
+            self.largest_x = x
+        if x > self.largest_y:
+            self.largest_y = y
+
         if selected_object == game_object:
             selected_button = pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.panel, object_id="@bright_button")
             self.game_object_buttons[selected_button] = game_object
@@ -78,6 +89,8 @@ class Hierarchy:
         self.y_depth += 1
         for child in game_object.children:
             self.create_buttons(child, selected_object, x_depth + 1)
+            
+        self.panel.set_scrollable_area_dimensions((x + 70, self.largest_y + 10))
     
     def kill_buttons(self):
         for button in self.game_object_buttons:
@@ -109,7 +122,7 @@ class Inspector:
             self.panel.rect.width * 0.05,
             self.panel.rect.height * 0.08,
             self.panel.rect.width * 0.9,
-            self.panel.rect.height * 0.97
+            self.panel.rect.height * 0.2
             )
         
         self.input_panels: list[InputPanel] = []
@@ -157,7 +170,7 @@ class Inspector:
             container=self.panel,
             ui_manager=self.ui_manager,
             x_padding=self.panel.rect.width / 16,
-            y_padding=100
+            y_padding=20
             )
 
             self.input_panels.append(transform_panel)

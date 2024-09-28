@@ -175,7 +175,9 @@ class Editor(App):
                                 game_object_to_destroy = self.selected_game_object
                                 self.select_game_object(self.selected_game_object)
                                 game_object_to_destroy.destroy()
-                                self.hierarchy.build_buttons()
+                                self.hierarchy.build_buttons(self.selected_game_object)
+                                if game_object_to_destroy.parent is not None:
+                                    self.select_game_object(game_object_to_destroy.parent)
                                 pg.display.set_caption(self.unsaved_window_name)
 
                         # Toggle moving
@@ -209,7 +211,6 @@ class Editor(App):
         RenderDict = TypedDict('RenderDict', {"obj_path": str, "image_path": str})
         ScriptDict = TypedDict('ScriptDict', {"name": str, "args": list[Any]})
         ObjectDict = TypedDict('Object', {"name": str, "transform": TransformDict, "children": Any, "render_component": RenderDict, "scripts": list[ScriptDict]})
-        FileDict = TypedDict('FileDict', {"objects": list[ObjectDict]})
 
         game_object_dicts: list[ObjectDict] = []
 

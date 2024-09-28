@@ -40,12 +40,18 @@ class Editor(App):
         self.ui_surface = pg.surface.Surface((self.width, self.height), pg.SRCALPHA)
         self.ui_manager = pgui.UIManager((self.width, self.height), "theme.json")
 
+        element_width_percent = 0.2
+        element_padding = 25
+        element_top_padding = 50
+
+        element_width = self.width * element_width_percent
+
         # Hierarchy
-        hierarchy_rect = pg.Rect(50, 80, self.width / 6.4, self.height - 90)
+        hierarchy_rect = pg.Rect(element_padding, element_padding + element_top_padding, element_width, self.height - element_padding * 2 - element_top_padding)
         self.hierarchy =  Hierarchy(hierarchy_rect, self.ui_manager, self.game_objects)
 
         # Inspector
-        inspector_rect = pg.Rect(self.width - 40 - self.width / 6.4, 40, self.width / 6.4, self.height - 75)
+        inspector_rect = pg.Rect(self.width - element_padding - element_width, element_padding, element_width, self.height - element_padding * 2)
         self.inspector = Inspector(inspector_rect, self.ui_manager)
 
         # Create buttons
@@ -76,11 +82,11 @@ class Editor(App):
         self.running = True
         self.delta_time = self.clock.tick(self.FPS) / 1000
         while self.running:
-            self.check_events()
 
             keys = pg.key.get_pressed()
             if keys[pg.K_s] and keys[pg.K_LCTRL]:
                 self.save()
+            self.check_events(keys)
 
             self.ui_manager.update(self.delta_time)
             self.ui_manager.rebuild_all_from_changed_theme_data()
@@ -112,7 +118,7 @@ class Editor(App):
                 self.camera.update(self.delta_time)
             self.delta_time = self.clock.tick(self.FPS) / 1000
 
-    def check_events(self):
+    def check_events(self, keys):
         for event in pg.event.get():
             match event.type:
 
@@ -131,6 +137,15 @@ class Editor(App):
                 case pg.MOUSEBUTTONUP:
                     if event.button == 3:
                         self.is_moving = False
+
+                # Scrolling
+                case pg.MOUSEWHEEL:
+                    if keys[pg.K_LSHIFT]:
+                        self.hierarchy.update_x_scroll(event.y * 20)
+                        self.hierarchy.build_buttons(self.selected_game_object)
+                    else:
+                        self.hierarchy.update_y_scroll(event.y * 20)
+                        self.hierarchy.build_buttons(self.selected_game_object)
 
                 # Buttons
                 case pgui.UI_BUTTON_PRESSED:

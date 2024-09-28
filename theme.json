@@ -156,10 +156,21 @@
         }
     },
 
-    "@scroll_panel": {
+    "text_entry_line": {
         "colours": {
+            "dark_bg": "rgb(77,49,24)",
             "normal_border": "rgb(6, 8, 5)",
-            "dark_bg": "rgb(76,100,68), rgb(53,70,48), 270"
+            "selected_bg": "rgb(57,29,4)"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "5"
+        }
+    },
+
+    "@bold_text": {
+        "font": {
+            "bold": 1
         }
     }
 }

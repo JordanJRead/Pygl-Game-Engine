@@ -6,34 +6,92 @@ from classes.transform import Transform
 from classes.vec3 import Vec3
 
 class InputPanel:
-    def __init__(self, rect: pg.Rect, button_size: tuple[float, float], row_count: int, row_size: int, default_values: list, function: function, container: pgui.core.IContainerLikeInterface, ui_manager: pgui.UIManager, x_padding = 10, y_padding = 70, row_labels: list[str] = [""], item_labels: list[list[str]] = [[""]]) -> None:
-        self.rect = rect
-        self.button_size = button_size
-        self.row_count = row_count
-        self.row_size = row_size
+    def __init__(self,
+                 parent_width: float,
+                 left_margin: float,
+                 top: float,
+                 default_values: list[list],
+                 function: function,
+                 container: pgui.core.IContainerLikeInterface, 
+                 ui_manager: pgui.UIManager,
+                 title: str,
+                 row_labels: list[str] = [""], 
+                 item_labels: list[list[str]] = [[""]]) -> None:
+        
+        self.row_count = len(default_values)
+        self.row_size = len(default_values[0])
         self.function = function
         self.default_values = default_values
+
+        # Hard coded styling constatnts
+        self.text_y_margin = 5
+        self.text_height = 30
+        self.row_height = 30
+        self.row_y_margin = 5
+        self.input_label_percent = 0.25
+        self.bottom_padding = 10
+
+        self.width = parent_width - left_margin * 2
+        self.height = (
+            self.text_y_margin
+            + self.text_height
+            + self.text_y_margin
+
+            + self.row_count *
+                ( self.text_y_margin
+                + self.text_height
+                + self.text_y_margin
+                + self.row_height
+                + self.row_y_margin
+                )
+            + self.bottom_padding
+        )
+        self.rect = pg.Rect(left_margin, top, self.width, self.height)
+
         self.ui_manager = ui_manager
         self.panel = pgui.elements.UIPanel(self.rect, manager=self.ui_manager, container=container, object_id="@dark_panel")
         self.rows: list[list[pgui.elements.UITextEntryLine]] = []
 
+        self.texts: list[pgui.elements.UILabel] = []
+
+        current_y = 0
+        current_y += self.text_y_margin
+
+        # Drawing
+        self.texts.append(pgui.elements.UILabel(pg.Rect(0, current_y, self.width, self.text_height), title, anchors={"centerx": "centerx"}, parent_element=self.panel, container=self.panel, object_id="@bold_text"))
+        current_y += self.text_height
+        current_y += self.text_y_margin
+
         for row_num in range(self.row_count):
             row = []
-            # pgui.elements.UILabel(pg.Rect()) # TODO                                       
+
+            # Label
+            current_y += self.text_y_margin
+            self.texts.append(pgui.elements.UILabel(pg.Rect(0, current_y, self.width, self.text_height), row_labels[row_num], self.ui_manager, self.panel, self.panel, anchors={"centerx": "centerx"}))
+            current_y += self.text_height
+            current_y += self.text_y_margin
+
+            # Input styling
+            input_width = (self.width - 20) / self.row_size
+
             for col_num in range(self.row_size):
-                index = col_num + self.row_count * row_num
+                self.texts.append(pgui.elements.UILabel(pg.Rect(input_width * col_num, current_y, input_width * self.input_label_percent, self.row_height), item_labels[row_num][col_num], self.ui_manager, self.panel, self.panel))
+
                 row.append(pgui.elements.UITextEntryLine(
                     relative_rect=pg.Rect(
-                        x_padding * (col_num + 1) + col_num * self.button_size[0],
-                        y_padding * (row_num + 1) + row_num * self.button_size[1],
-                        self.button_size[0],
-                        self.button_size[1]
+                        input_width * col_num + input_width * self.input_label_percent,
+                        current_y,
+                        input_width * (1 - self.input_label_percent),
+                        self.row_height
                         ),
                     manager=self.ui_manager,
                     container=self.panel,
-                    initial_text=str(default_values[index]),
-                    placeholder_text=str(default_values[index])
+                    initial_text=str(default_values[row_num][col_num]),
+                    placeholder_text=str(default_values[row_num][col_num])
                     ))
+
+            current_y += self.row_height
+            current_y += self.row_y_margin
             self.rows.append(row)
 
     def destroy(self):
@@ -41,11 +99,12 @@ class InputPanel:
         for row in self.rows:
             for field in row:
                 field.kill()
+        for text in self.texts:
+            text.kill()
 
 class Hierarchy:
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_objects: list[GameObject]) -> None:
-        self.panel = pgui.elements.UIScrollingContainer(rect, ui_manager, object_id="@scroll_panel")
-        # self.panel = pgui.elements.UIPanel(rect, manager=ui_manager, object_id="@scroll_panel")
+        self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
         self.rect = rect
         self.ui_manager = ui_manager
         self.game_objects = game_objects
@@ -54,6 +113,8 @@ class Hierarchy:
         self.move_button: pgui.elements.UIButton | None = None
         self.largest_x = 0
         self.largest_y = 0
+        self.x_scroll = 0
+        self.y_scroll = 0
         self.build_buttons(None)
 
     
@@ -73,11 +134,16 @@ class Hierarchy:
 
         x = left_margin + depth_offset * x_depth
         y = top_margin + size * self.y_depth
+        self.largest_x = 0
+        self.largest_y = 0
 
         if x > self.largest_x:
             self.largest_x = x
         if x > self.largest_y:
             self.largest_y = y
+
+        x += self.x_scroll
+        y += self.y_scroll
 
         if selected_object == game_object:
             selected_button = pgui.elements.UIButton(pg.Rect((x, y), (100, 50)), game_object.name, self.ui_manager, container=self.panel, object_id="@bright_button")
@@ -89,8 +155,6 @@ class Hierarchy:
         self.y_depth += 1
         for child in game_object.children:
             self.create_buttons(child, selected_object, x_depth + 1)
-            
-        self.panel.set_scrollable_area_dimensions((x + 70, self.largest_y + 10))
     
     def kill_buttons(self):
         for button in self.game_object_buttons:
@@ -104,6 +168,18 @@ class Hierarchy:
         else:
             self.move_button.change_object_id("@move_button")
         self.moving = not self.moving
+    
+    def update_y_scroll(self, y_scroll_inc: float):
+        new_scroll = y_scroll_inc + self.y_scroll
+        max_scroll = self.rect.height - self.largest_y - 70
+        if new_scroll <= 0 and new_scroll > max_scroll:
+            self.y_scroll = new_scroll
+    
+    def update_x_scroll(self, x_scroll_inc: float):
+        new_scroll = x_scroll_inc + self.x_scroll
+        max_scroll = self.rect.width - self.largest_x - 180
+        if new_scroll <= 0 and new_scroll > max_scroll:
+            self.x_scroll = new_scroll
 
 class Inspector:
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_object: GameObject | None = None) -> None:
@@ -117,13 +193,6 @@ class Inspector:
         delete_button_size = 50
         delete_button_padding = 10
         self.delete_button_rect = pg.Rect(self.panel.relative_rect.width - delete_button_padding - delete_button_size, delete_button_padding, delete_button_size, delete_button_size)
-
-        self.transform_panel_rect = pg.Rect(
-            self.panel.rect.width * 0.05,
-            self.panel.rect.height * 0.08,
-            self.panel.rect.width * 0.9,
-            self.panel.rect.height * 0.2
-            )
         
         self.input_panels: list[InputPanel] = []
 
@@ -155,22 +224,19 @@ class Inspector:
             self.name_input = pgui.elements.UITextEntryLine(pg.Rect(0, 40, 100, 50), self.ui_manager, anchors={"centerx": "centerx"}, placeholder_text=self.game_object.name, container=self.panel)
 
             default_values = []
-            default_values.extend(self.game_object.local_transform.pos.to_list())
-            default_values.extend(self.game_object.local_transform.scale.to_list())
-            default_values.extend(self.game_object.local_transform.rotation.to_list())
+            default_values.append(self.game_object.local_transform.pos.to_list())
+            default_values.append(self.game_object.local_transform.scale.to_list())
+            default_values.append(self.game_object.local_transform.rotation.to_list())
 
+            row_labels = ["Position", "Scale", "Rotation"]
+
+            item_labels = []
+            item_labels.append(["x", "y", "z"])
+            item_labels.append(["x", "y", "z"])
+            item_labels.append(["x", "y", "z"])
 
             transform_panel = InputPanel(
-            rect=self.transform_panel_rect,
-            button_size=(self.rect.width / 4, 50),
-            row_count=3,
-            row_size=3,
-            default_values=default_values,
-            function=self.transform_update_function,
-            container=self.panel,
-            ui_manager=self.ui_manager,
-            x_padding=self.panel.rect.width / 16,
-            y_padding=20
+                self.rect.width, 10, 100, default_values, self.transform_update_function, self.panel, self.ui_manager, "Transform", row_labels, item_labels
             )
 
             self.input_panels.append(transform_panel)

@@ -24,14 +24,15 @@ class InputPanel:
         self.default_values = default_values
 
         # Hard coded styling constatnts
+        self.x_padding = 10
         self.text_y_margin = 5
         self.text_height = 30
         self.row_height = 30
         self.row_y_margin = 5
-        self.input_label_percent = 0.25
         self.bottom_padding = 10
 
         self.width = parent_width - left_margin * 2
+        self.padded_width = self.width - self.x_padding * 2
         self.height = (
             self.text_y_margin
             + self.text_height
@@ -58,7 +59,9 @@ class InputPanel:
         current_y += self.text_y_margin
 
         # Drawing
-        self.texts.append(pgui.elements.UILabel(pg.Rect(0, current_y, self.width, self.text_height), title, anchors={"centerx": "centerx"}, parent_element=self.panel, container=self.panel, object_id="@bold_text"))
+
+        # Title
+        self.texts.append(pgui.elements.UILabel(pg.Rect(self.x_padding, current_y, self.padded_width, self.text_height), title, anchors={"centerx": "centerx"}, parent_element=self.panel, container=self.panel, object_id="@bold_text"))
         current_y += self.text_height
         current_y += self.text_y_margin
 
@@ -67,21 +70,24 @@ class InputPanel:
 
             # Label
             current_y += self.text_y_margin
-            self.texts.append(pgui.elements.UILabel(pg.Rect(0, current_y, self.width, self.text_height), row_labels[row_num], self.ui_manager, self.panel, self.panel, anchors={"centerx": "centerx"}))
+            self.texts.append(pgui.elements.UILabel(pg.Rect(self.x_padding, current_y, self.padded_width, self.text_height), row_labels[row_num], self.ui_manager, self.panel, self.panel, anchors={"centerx": "centerx"}))
             current_y += self.text_height
             current_y += self.text_y_margin
 
-            # Input styling
-            input_width = (self.width - 20) / self.row_size
+            input_width = self.padded_width / self.row_size
 
             for col_num in range(self.row_size):
-                self.texts.append(pgui.elements.UILabel(pg.Rect(input_width * col_num, current_y, input_width * self.input_label_percent, self.row_height), item_labels[row_num][col_num], self.ui_manager, self.panel, self.panel))
+                # Input label
+                input_label_percent = self.calculate_label_percent(item_labels[row_num][col_num], input_width)
+                self.texts.append(pgui.elements.UILabel(pg.Rect(input_width * col_num + self.x_padding, current_y, input_width * input_label_percent, self.row_height), item_labels[row_num][col_num], self.ui_manager, self.panel, self.panel))
 
+                # Input field
+                # TODO add right margin to input field if it is not the last field
                 row.append(pgui.elements.UITextEntryLine(
                     relative_rect=pg.Rect(
-                        input_width * col_num + input_width * self.input_label_percent,
+                        input_width * col_num + input_width * input_label_percent + self.x_padding,
                         current_y,
-                        input_width * (1 - self.input_label_percent),
+                        input_width * (1 - input_label_percent),
                         self.row_height
                         ),
                     manager=self.ui_manager,
@@ -93,6 +99,17 @@ class InputPanel:
             current_y += self.row_height
             current_y += self.row_y_margin
             self.rows.append(row)
+
+    @staticmethod
+    def calculate_label_percent(label_text: str, max_width: float):
+        length = len(label_text)
+        max_letters = 10
+        if length == 0:
+            return 0
+        elif length > max_letters:
+            return 0.9
+        else:
+            return length / 10
 
     def destroy(self):
         self.panel.kill()
@@ -187,7 +204,6 @@ class Inspector:
         self.ui_manager = ui_manager
         self.rect = rect
         self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
-        self.name_input: pgui.elements.UITextEntryLine | None = None
 
         self.delete_button: pgui.elements.UIButton | None = None
         delete_button_size = 50
@@ -205,6 +221,10 @@ class Inspector:
         )
         game_object.update_transform(new_transform)
 
+    @staticmethod
+    def name_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]]):
+        game_object.name = rows[0][0].text
+
     def set_game_object(self, game_object: GameObject | None):
         self.destroy()
         self.game_object = game_object
@@ -212,8 +232,6 @@ class Inspector:
 
     def destroy(self):
             if not self.game_object is None:
-                self.name_input.kill()
-                self.name_input = None
                 self.delete_button.kill()
                 for input_panel in self.input_panels:
                     input_panel.destroy()
@@ -221,8 +239,20 @@ class Inspector:
 
     def create(self):
         if self.game_object:
-            self.name_input = pgui.elements.UITextEntryLine(pg.Rect(0, 40, 100, 50), self.ui_manager, anchors={"centerx": "centerx"}, placeholder_text=self.game_object.name, container=self.panel)
 
+            self.delete_button = pgui.elements.UIButton(self.delete_button_rect, "", self.ui_manager, object_id="@delete_button", container=self.panel)
+            
+            x_margin = 10
+            y_margin = 20
+            current_y = self.delete_button.rect.height + y_margin
+            # Name panel
+            name_panel = InputPanel(
+                self.rect.width, x_margin, current_y, [[self.game_object.name]], self.name_update_function, self.panel, self.ui_manager, self.game_object.name, ["Name"], [[""]]
+            )
+            self.input_panels.append(name_panel)
+            current_y += name_panel.height + y_margin
+
+            # Transform panel
             default_values = []
             default_values.append(self.game_object.local_transform.pos.to_list())
             default_values.append(self.game_object.local_transform.scale.to_list())
@@ -236,12 +266,12 @@ class Inspector:
             item_labels.append(["x", "y", "z"])
 
             transform_panel = InputPanel(
-                self.rect.width, 10, 100, default_values, self.transform_update_function, self.panel, self.ui_manager, "Transform", row_labels, item_labels
+                self.rect.width, x_margin, current_y, default_values, self.transform_update_function, self.panel, self.ui_manager, "Transform", row_labels, item_labels
             )
 
             self.input_panels.append(transform_panel)
+            current_y += transform_panel.height + y_margin
 
-            self.delete_button = pgui.elements.UIButton(self.delete_button_rect, "", self.ui_manager, object_id="@delete_button", container=self.panel)
 
 class CreationButtons:
     def __init__(self, bottom_rect: pg.Rect, ui_manager: pgui.UIManager) -> None:

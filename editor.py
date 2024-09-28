@@ -3,10 +3,8 @@ import pygame as pg
 import pygame_gui as pgui
 from classes.gameobject import GameObject
 from classes.editorcamera import EditorCamera
-from classes.transform import Transform
 from classes.colors import Colors
 from classes.editor_items import *
-from classes.vec3 import Vec3
 from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
@@ -199,22 +197,16 @@ class Editor(App):
                         case self.hierarchy.move_button:
                             self.hierarchy.toggle_move_button()
                 
-                # Change game object name
                 case pgui.UI_TEXT_ENTRY_FINISHED:
-                    if event.ui_element == self.inspector.name_input:
-                        self.selected_game_object.name = event.text
-                        self.hierarchy.game_objects = self.game_objects
-                        self.hierarchy.build_buttons(self.select_game_object)
-                        pg.display.set_caption(self.unsaved_window_name)
-
                     # Set value in inspector
-                    else:
-                        for input_panel in self.inspector.input_panels:
-                            for row in input_panel.rows:
-                                for input_field in row:
-                                    if event.ui_element == input_field:
-                                        input_panel.function(self.inspector.game_object, input_panel.rows)
-                                        break
+                    for input_panel in self.inspector.input_panels:
+                        for row in input_panel.rows:
+                            for input_field in row:
+                                if event.ui_element == input_field:
+                                    input_panel.function(self.inspector.game_object, input_panel.rows)
+                                    self.hierarchy.build_buttons()
+                                    self.inspector.set_game_object(self.selected_game_object) # Refresh
+                                    break
 
             self.ui_manager.process_events(event)
 

@@ -81,13 +81,17 @@ class InputPanel:
                 input_label_percent = self.calculate_label_percent(item_labels[row_num][col_num], input_width)
                 self.texts.append(pgui.elements.UILabel(pg.Rect(input_width * col_num + self.x_padding, current_y, input_width * input_label_percent, self.row_height), item_labels[row_num][col_num], self.ui_manager, self.panel, self.panel))
 
+                field_width = input_width * (1 - input_label_percent)
+                if col_num + 1 != self.row_size:
+                    if field_width > 15:
+                        field_width -= 10
+
                 # Input field
-                # TODO add right margin to input field if it is not the last field
                 row.append(pgui.elements.UITextEntryLine(
                     relative_rect=pg.Rect(
                         input_width * col_num + input_width * input_label_percent + self.x_padding,
                         current_y,
-                        input_width * (1 - input_label_percent),
+                        field_width,
                         self.row_height
                         ),
                     manager=self.ui_manager,

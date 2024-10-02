@@ -9,7 +9,7 @@ from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
 import json
-
+# FIXME scrolling doesnt work soemtimes
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
         super().__init__(width, height, FPS)
@@ -17,6 +17,7 @@ class Editor(App):
     def init_ui(self):
         self.window_name = "Editor"
         self.unsaved_window_name = "*Editor"
+        self.is_saved = True
         pg.display.set_caption(self.window_name)
         self.viewport = (self.width//4, self.height//4, self.width//2, self.height//2)
         self.viewport_rect = pg.Rect(self.viewport[0], self.height - self.viewport[1] - self.viewport[3], self.viewport[2], self.viewport[3])
@@ -144,6 +145,14 @@ class Editor(App):
                     else:
                         self.hierarchy.update_y_scroll(event.y * 20)
                         self.hierarchy.build_buttons(self.selected_game_object)
+                
+                # FIXME
+                # Delete
+                case pg.K_BACKSPACE:
+                    if self.selected_game_object:
+                        print("DELETE (not printing)")
+                        self.delete_selected_object()
+                        self.unsave()
 
                 # Buttons
                 case pgui.UI_BUTTON_PRESSED:
@@ -151,8 +160,10 @@ class Editor(App):
                     # Hierarchy
                     for button in self.hierarchy.game_object_buttons:
                         if event.ui_element == button:
+
                             # Move object in hierarchy to clicked on object
                             if self.hierarchy.moving:
+                                self.unsave()
                                 new_parent = self.hierarchy.game_object_buttons[button]
                                 if new_parent in self.selected_game_object.children: # Swap parent and child (not implemented)
                                     pass
@@ -160,19 +171,18 @@ class Editor(App):
                                     new_parent.add_child(self.selected_game_object, 0)
                                     self.hierarchy.build_buttons(self.selected_game_object)
                                     self.hierarchy.toggle_move_button()
-                                pg.display.set_caption(self.unsaved_window_name)
                             else:
+                                # Select game object
                                 self.select_game_object(self.hierarchy.game_object_buttons[button])
                             break
                     
                     match event.ui_element:
-
                         # Create object
                         case self.creation_buttons.create_top_level_button:
                             new_object = GameObject(self, "New Object")
                             self.game_objects.append(new_object)
                             self.select_game_object(new_object)
-                            pg.display.set_caption(self.unsaved_window_name)
+                            self.unsave()
                         
                         # Create child
                         case self.creation_buttons.child_button:
@@ -180,23 +190,16 @@ class Editor(App):
                                 new_object = GameObject(self, "New Child Object")
                                 self.selected_game_object.add_child(new_object, 0)
                                 self.select_game_object(new_object)
-                                pg.display.set_caption(self.unsaved_window_name)
+                                self.unsave()
 
                         # Delete object
                         case self.inspector.delete_button:
-                            if self.selected_game_object:
-                                game_object_to_destroy = self.selected_game_object
-                                self.select_game_object(self.selected_game_object)
-                                game_object_to_destroy.destroy()
-                                self.hierarchy.build_buttons(self.selected_game_object)
-                                if game_object_to_destroy.parent is not None:
-                                    self.select_game_object(game_object_to_destroy.parent)
-                                pg.display.set_caption(self.unsaved_window_name)
+                            self.delete_selected_object()
 
                         # Toggle moving
                         case self.hierarchy.move_button:
                             self.hierarchy.toggle_move_button()
-                
+
                 case pgui.UI_TEXT_ENTRY_FINISHED:
                     # Set value in inspector
                     for input_panel in self.inspector.input_panels:
@@ -206,9 +209,20 @@ class Editor(App):
                                     input_panel.function(self.inspector.game_object, input_panel.rows)
                                     self.hierarchy.build_buttons()
                                     self.inspector.set_game_object(self.selected_game_object) # Refresh
+                                    self.unsave()
                                     break
 
             self.ui_manager.process_events(event)
+
+    def delete_selected_object(self):
+        if self.selected_game_object:
+            game_object_to_destroy = self.selected_game_object
+            self.select_game_object(self.selected_game_object)
+            game_object_to_destroy.destroy()
+            self.hierarchy.build_buttons(self.selected_game_object)
+            if game_object_to_destroy.parent is not None:
+                self.select_game_object(game_object_to_destroy.parent)
+            self.unsave()
 
     def save(self, path: str = "gameobjects.json"):
         pg.display.set_caption(self.window_name)
@@ -227,6 +241,10 @@ class Editor(App):
         with open(path, "w") as file:
             json.dump({"objects": game_object_dicts}, file, indent=2)
     
+    def unsave(self):
+        self.is_saved = False
+        pg.display.set_caption(self.unsaved_window_name)
+
     def create_dict_from_game_object(self, game_object: GameObject):
         # Types
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})

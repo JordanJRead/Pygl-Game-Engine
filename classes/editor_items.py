@@ -155,12 +155,10 @@ class Hierarchy:
 
         x = left_margin + depth_offset * x_depth
         y = top_margin + size * self.y_depth
-        self.largest_x = 0
-        self.largest_y = 0
 
         if x > self.largest_x:
             self.largest_x = x
-        if x > self.largest_y:
+        if y > self.largest_y:
             self.largest_y = y
 
         x += self.x_scroll

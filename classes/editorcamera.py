@@ -60,7 +60,7 @@ class EditorCamera:
             move_vector.x -= 1
         if keys[pg.K_d]:
             move_vector.x += 1
-        if keys[pg.K_LSHIFT]:
+        if keys[pg.K_LCTRL]:
             move_vector.y -= 1
         if keys[pg.K_SPACE]:
             move_vector.y += 1
@@ -69,6 +69,8 @@ class EditorCamera:
         if keys[pg.K_w]:
             move_vector.z += 1
         move_vector = move_vector.normalize() * self.speed * delta_time
+        if keys[pg.K_LSHIFT]:
+            move_vector *= 2
         
         move_vector = Vec3(move_vector.x * cos(-self.yaw) - move_vector.z * sin(-self.yaw), move_vector.y, move_vector.x * sin(-self.yaw) + move_vector.z * cos(-self.yaw))
         self.pos += move_vector

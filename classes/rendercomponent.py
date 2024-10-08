@@ -8,8 +8,10 @@ class RenderComponent:
         self.image_path = image_path
         self.obj_path = obj_path
         self.is_active = active
+        if obj_path == "" or image_path == "":
+            self.is_active = False
         self.is_bright = False
-        if active:
+        if self.is_active:
             self.vertices = load_obj(obj_path)
 
             self.vbo = glGenBuffers(1)
@@ -38,7 +40,7 @@ class RenderComponent:
     
     def update_paths(self, obj_path: str, image_path: str):
         self.destroy()
-        self.__init__(obj_path, image_path, self.is_active)
+        self.__init__(obj_path, image_path)
 
 def load_obj(file_path: str) -> np.ndarray:
         vertices: list[float] = [] # x y z nx ny nz u v x y z nx ny nz u v...

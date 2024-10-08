@@ -221,6 +221,7 @@ class Inspector:
     @staticmethod
     def render_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]]):
         game_object.render_component.update_paths(rows[0][0].text, rows[1][0].text)
+        game_object.render_component.is_bright = True
 
     @staticmethod
     def transform_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]]):
@@ -295,8 +296,6 @@ class Inspector:
             )
 
             self.input_panels.append(render_component_panel)
-
-
 
 class CreationButtons:
     def __init__(self, bottom_rect: pg.Rect, ui_manager: pgui.UIManager) -> None:

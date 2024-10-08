@@ -48,6 +48,8 @@ class GameObject:
         self.local_transform = new_transform
         if self.render_component:
             self.local_transform.model_matrix = transform.create_entire_model_matrix(self.local_transform, self.parent)
+        for child in self.children:
+            child.update_transform(child.local_transform)
         
     def get_component(self, wanted_type):
         for component in self.components:

@@ -9,7 +9,7 @@ from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
 import json
-# FIXME scrolling doesnt work soemtimes
+# FIXME moving objecti n hierarchy doesnt update transfrom
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
         super().__init__(width, height, FPS)

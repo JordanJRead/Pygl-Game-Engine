@@ -127,8 +127,34 @@ class InputPanel:
         for text in self.texts:
             text.kill()
 
-class Hierarchy:
+class ScrollableContainer:
+    def __init__(self) -> None:
+        self.x_scroll = 0
+        self.y_scroll = 0
+        self.largest_x = 0
+        self.largest_y = 0
+        self.rect: pg.Rect = None
+        
+    def update_y_scroll(self, y_scroll_inc: float):
+        new_scroll = y_scroll_inc + self.y_scroll
+        max_scroll = self.rect.height - self.largest_y - 70
+        if new_scroll < max_scroll:
+            new_scroll = max_scroll
+        if new_scroll <= 0 and new_scroll >= max_scroll:
+            self.y_scroll = new_scroll
+    
+    def update_x_scroll(self, x_scroll_inc: float):
+        new_scroll = x_scroll_inc + self.x_scroll
+        max_scroll = self.rect.width - self.largest_x - 180
+        if new_scroll <= 0 and new_scroll > max_scroll:
+            self.x_scroll = new_scroll
+    
+    def build(self, game_object: GameObject):
+        pass
+
+class Hierarchy(ScrollableContainer):
     def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_objects: list[GameObject]) -> None:
+        super().__init__()
         self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
         self.rect = rect
         self.ui_manager = ui_manager
@@ -138,20 +164,17 @@ class Hierarchy:
         self.move_button: pgui.elements.UIButton | None = None
         self.largest_x = 0
         self.largest_y = 0
-        self.x_scroll = 0
-        self.y_scroll = 0
-        self.build_buttons(None)
+        self.build(None)
 
-    
-    def build_buttons(self, selected_object: GameObject | None = None):
-        self.kill_buttons()
+    def build(self, selected_object: GameObject | None = None):
+        self.destroy()
         self.y_depth = 0
         self.largest_x = 0
         self.largest_y = 0
         for game_object in self.game_objects:
-            self.create_buttons(game_object, selected_object)
+            self.build_object(game_object, selected_object)
 
-    def create_buttons(self, game_object: GameObject, selected_object: GameObject, x_depth: int = 0):
+    def build_object(self, game_object: GameObject, selected_object: GameObject, x_depth: int = 0):
         top_margin = 10
         left_margin = 10
         size = 50
@@ -177,9 +200,9 @@ class Hierarchy:
 
         self.y_depth += 1
         for child in game_object.children:
-            self.create_buttons(child, selected_object, x_depth + 1)
+            self.build_object(child, selected_object, x_depth + 1)
     
-    def kill_buttons(self):
+    def destroy(self):
         for button in self.game_object_buttons:
             button.kill()
         if self.move_button:
@@ -191,22 +214,10 @@ class Hierarchy:
         else:
             self.move_button.change_object_id("@move_button")
         self.moving = not self.moving
-    
-    def update_y_scroll(self, y_scroll_inc: float):
-        new_scroll = y_scroll_inc + self.y_scroll
-        max_scroll = self.rect.height - self.largest_y - 70
-        if new_scroll <= 0 and new_scroll > max_scroll:
-            self.y_scroll = new_scroll
-    
-    def update_x_scroll(self, x_scroll_inc: float):
-        new_scroll = x_scroll_inc + self.x_scroll
-        max_scroll = self.rect.width - self.largest_x - 180
-        if new_scroll <= 0 and new_scroll > max_scroll:
-            self.x_scroll = new_scroll
 
-class Inspector:
-    def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, game_object: GameObject | None = None) -> None:
-        self.game_object = game_object
+class Inspector(ScrollableContainer):
+    def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager) -> None:
+        super().__init__()
         self.ui_manager = ui_manager
         self.rect = rect
         self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
@@ -237,37 +248,45 @@ class Inspector:
         game_object.name = rows[0][0].text
 
     def set_game_object(self, game_object: GameObject | None):
+        if game_object is None:
+            self.x_scroll = 0
+            self.y_scroll = 0
         self.destroy()
         self.game_object = game_object
-        self.create()
+        self.build(game_object)
 
     def destroy(self):
-            if not self.game_object is None:
+            self.largest_x = 0
+            self.largest_y = 0
+            try:
                 self.delete_button.kill()
                 for input_panel in self.input_panels:
                     input_panel.destroy()
                 self.input_panels.clear()
+            except:
+                pass
 
-    def create(self):
-        if self.game_object:
+    def build(self, game_object: GameObject):
+        self.destroy()
+        if game_object:
 
             self.delete_button = pgui.elements.UIButton(self.delete_button_rect, "", self.ui_manager, object_id="@delete_button", container=self.panel)
             
             x_margin = 10
             y_margin = 20
-            current_y = self.delete_button.rect.height + y_margin
+            current_y = self.delete_button.rect.height + y_margin + self.y_scroll
             # Name panel
             name_panel = InputPanel(
-                self.rect.width, x_margin, current_y, [[self.game_object.name]], self.name_update_function, self.panel, self.ui_manager, self.game_object.name, ["Name"], [[""]]
+                self.rect.width, x_margin, current_y, [[game_object.name]], self.name_update_function, self.panel, self.ui_manager, game_object.name, ["Name"], [[""]]
             )
             self.input_panels.append(name_panel)
             current_y += name_panel.height + y_margin
 
             # Transform panel
             default_values = []
-            default_values.append(self.game_object.local_transform.pos.to_list())
-            default_values.append(self.game_object.local_transform.scale.to_list())
-            default_values.append(self.game_object.local_transform.rotation.to_list())
+            default_values.append(game_object.local_transform.pos.to_list())
+            default_values.append(game_object.local_transform.scale.to_list())
+            default_values.append(game_object.local_transform.rotation.to_list())
 
             row_labels = ["Position", "Scale", "Rotation"]
 
@@ -284,7 +303,7 @@ class Inspector:
             current_y += transform_panel.height + y_margin
 
             # Render object panel
-            default_values = [[self.game_object.render_component.obj_path], [self.game_object.render_component.image_path]]
+            default_values = [[game_object.render_component.obj_path], [game_object.render_component.image_path]]
             item_labels = []
             item_labels.append(["Obj File"])
             item_labels.append(["Image File"])
@@ -294,8 +313,35 @@ class Inspector:
             render_component_panel = InputPanel(
                 self.rect.width, x_margin, current_y, default_values, self.render_component_update_function, self.panel, self.ui_manager, "Render Component", row_labels, item_labels
             )
-
             self.input_panels.append(render_component_panel)
+            current_y += render_component_panel.height + y_margin
+            # Render object panel
+            default_values = [[game_object.render_component.obj_path], [game_object.render_component.image_path]]
+            item_labels = []
+            item_labels.append(["Obj File"])
+            item_labels.append(["Image File"])
+
+            row_labels = ["", "", ""]
+
+            render_component_panel = InputPanel(
+                self.rect.width, x_margin, current_y, default_values, self.render_component_update_function, self.panel, self.ui_manager, "Render Component", row_labels, item_labels
+            )
+            self.input_panels.append(render_component_panel)
+            current_y += render_component_panel.height + y_margin
+            # Render object panel
+            default_values = [[game_object.render_component.obj_path], [game_object.render_component.image_path]]
+            item_labels = []
+            item_labels.append(["Obj File"])
+            item_labels.append(["Image File"])
+
+            row_labels = ["", "", ""]
+
+            render_component_panel = InputPanel(
+                self.rect.width, x_margin, current_y, default_values, self.render_component_update_function, self.panel, self.ui_manager, "Render Component", row_labels, item_labels
+            )
+            self.input_panels.append(render_component_panel)
+            current_y += render_component_panel.height + y_margin
+            self.largest_y = current_y
 
 class CreationButtons:
     def __init__(self, bottom_rect: pg.Rect, ui_manager: pgui.UIManager) -> None:

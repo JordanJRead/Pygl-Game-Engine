@@ -113,7 +113,10 @@
           "scripts": []
         }
       ],
-      "render_component": null,
+      "render_component": {
+        "obj_path": "assets/objects/Cube.txt",
+        "image_path": "assets/images/test.png"
+      },
       "scripts": []
     }
   ]

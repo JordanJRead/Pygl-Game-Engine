@@ -9,7 +9,7 @@ from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
 import json
-# FIXME moving objecti n hierarchy doesnt update transfrom
+# TODO clean up hierarchy code
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
         super().__init__(width, height, FPS)
@@ -68,14 +68,14 @@ class Editor(App):
             self.creation_buttons.disable_child_button()
             self.selected_game_object = None
             self.inspector.set_game_object(None)
-            self.hierarchy.build_buttons(None)
+            self.hierarchy.build(None)
             return
 
         # Set new
         self.creation_buttons.enable_child_button()
         self.selected_game_object = game_object
         game_object.render_component.is_bright = True
-        self.hierarchy.build_buttons(self.selected_game_object)
+        self.hierarchy.build(self.selected_game_object)
 
     def main_loop(self):
         self.running = True
@@ -139,12 +139,17 @@ class Editor(App):
 
                 # Scrolling
                 case pg.MOUSEWHEEL:
-                    if keys[pg.K_LSHIFT]:
-                        self.hierarchy.update_x_scroll(event.y * 20)
-                        self.hierarchy.build_buttons(self.selected_game_object)
-                    else:
-                        self.hierarchy.update_y_scroll(event.y * 20)
-                        self.hierarchy.build_buttons(self.selected_game_object)
+                    hovered_object: ScrollableContainer | None = None
+                    if pg.Rect.collidepoint(self.hierarchy.rect, pg.mouse.get_pos()):
+                        hovered_object = self.hierarchy
+                    if pg.Rect.collidepoint(self.inspector.rect, pg.mouse.get_pos()):
+                        hovered_object = self.inspector
+                    if hovered_object:
+                        if keys[pg.K_LSHIFT]:
+                            hovered_object.update_x_scroll(event.y * 20)
+                        else:
+                            hovered_object.update_y_scroll(event.y * 20)
+                        hovered_object.build(self.selected_game_object)
                 
                 # FIXME
                 # Delete
@@ -169,7 +174,8 @@ class Editor(App):
                                     pass
                                 else:
                                     new_parent.add_child(self.selected_game_object, 0)
-                                    self.hierarchy.build_buttons(self.selected_game_object)
+                                    self.selected_game_object.update_transform(self.selected_game_object.local_transform)
+                                    self.hierarchy.build(self.selected_game_object)
                                     self.hierarchy.toggle_move_button()
                             else:
                                 # Select game object
@@ -207,7 +213,7 @@ class Editor(App):
                             for input_field in row:
                                 if event.ui_element == input_field:
                                     input_panel.function(self.inspector.game_object, input_panel.rows)
-                                    self.hierarchy.build_buttons()
+                                    self.hierarchy.build()
                                     self.inspector.set_game_object(self.selected_game_object) # Refresh
                                     self.unsave()
                                     break
@@ -219,7 +225,7 @@ class Editor(App):
             game_object_to_destroy = self.selected_game_object
             self.select_game_object(self.selected_game_object)
             game_object_to_destroy.destroy()
-            self.hierarchy.build_buttons(self.selected_game_object)
+            self.hierarchy.build(self.selected_game_object)
             if game_object_to_destroy.parent is not None:
                 self.select_game_object(game_object_to_destroy.parent)
             self.unsave()

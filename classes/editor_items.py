@@ -107,13 +107,17 @@ class InputPanel:
     @staticmethod
     def calculate_label_percent(label_text: str, max_width: float):
         length = len(label_text)
-        max_letters = 10
+        max_letters = 20
         if length == 0:
             return 0
         elif length > max_letters:
             return 0.9
         else:
-            return length / 10
+            # return length / 10
+            percent = length * 0.045 + 5 / max_width
+            if percent > 0.9:
+                return 0.9
+            return percent
 
     def destroy(self):
         self.panel.kill()
@@ -215,6 +219,10 @@ class Inspector:
         self.input_panels: list[InputPanel] = []
 
     @staticmethod
+    def render_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]]):
+        game_object.render_component.update_paths(rows[0][0].text, rows[1][0].text)
+
+    @staticmethod
     def transform_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]]):
         new_transform = Transform(
             Vec3(float(rows[0][0].text), float(rows[0][1].text), float(rows[0][2].text)),
@@ -273,6 +281,21 @@ class Inspector:
 
             self.input_panels.append(transform_panel)
             current_y += transform_panel.height + y_margin
+
+            # Render object panel
+            default_values = [[self.game_object.render_component.obj_path], [self.game_object.render_component.image_path]]
+            item_labels = []
+            item_labels.append(["Obj File"])
+            item_labels.append(["Image File"])
+
+            row_labels = ["", "", ""]
+
+            render_component_panel = InputPanel(
+                self.rect.width, x_margin, current_y, default_values, self.render_component_update_function, self.panel, self.ui_manager, "Render Component", row_labels, item_labels
+            )
+
+            self.input_panels.append(render_component_panel)
+
 
 
 class CreationButtons:

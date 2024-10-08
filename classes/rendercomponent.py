@@ -35,6 +35,10 @@ class RenderComponent:
             self.texture2d.destroy()
             glDeleteBuffers(1, (self.vbo,))
             glDeleteVertexArrays(1, (self.vao,))
+    
+    def update_paths(self, obj_path: str, image_path: str):
+        self.destroy()
+        self.__init__(obj_path, image_path, self.is_active)
 
 def load_obj(file_path: str) -> np.ndarray:
         vertices: list[float] = [] # x y z nx ny nz u v x y z nx ny nz u v...

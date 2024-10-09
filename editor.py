@@ -127,6 +127,11 @@ class Editor(App):
                 case pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         self.running = False
+                    # Delete
+                    if event.key == pg.K_DELETE:
+                        if self.selected_game_object:
+                            self.delete_selected_object()
+                            self.unsave()
 
                 # Move in scene
                 case pg.MOUSEBUTTONDOWN:
@@ -146,18 +151,11 @@ class Editor(App):
                         hovered_object = self.inspector
                     if hovered_object:
                         if keys[pg.K_LSHIFT]:
-                            hovered_object.update_x_scroll(event.y * 20)
+                            hovered_object.update_x_scroll(event.y * 200)
                         else:
                             hovered_object.update_y_scroll(event.y * 20)
                         hovered_object.build(self.selected_game_object)
                 
-                # FIXME
-                # Delete
-                case pg.K_BACKSPACE:
-                    if self.selected_game_object:
-                        print("DELETE (not printing)")
-                        self.delete_selected_object()
-                        self.unsave()
 
                 # Buttons
                 case pgui.UI_BUTTON_PRESSED:
@@ -212,7 +210,7 @@ class Editor(App):
                         for row in input_panel.rows:
                             for input_field in row:
                                 if event.ui_element == input_field:
-                                    input_panel.function(self.inspector.game_object, input_panel.rows)
+                                    input_panel.function(self.inspector.game_object, input_panel.rows, input_panel.cls)
                                     self.hierarchy.build()
                                     self.inspector.set_game_object(self.selected_game_object) # Refresh
                                     self.unsave()

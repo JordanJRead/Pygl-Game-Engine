@@ -14,8 +14,8 @@ class Transform:
         self.model_matrix = mat4.create_identity()
     
     @staticmethod
-    def zero():
-        return Transform(Vec3.zero(), Vec3.zero(), Vec3.zero())
+    def identity():
+        return Transform(Vec3.zero(), Vec3.one(), Vec3.zero())
         
         
 @staticmethod

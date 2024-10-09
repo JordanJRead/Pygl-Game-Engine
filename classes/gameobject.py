@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 # Scripts is a list of (classtype, arguments)
 class GameObject:
-    def __init__(self, app: App, name: str, local_transform: Transform = Transform.zero(), children: list[GameObject] = None, render_component: RenderComponent = None, scripts: list[tuple[any, list[any]]] = None) -> None:
+    def __init__(self, app: App, name: str, local_transform: Transform = Transform.identity(), children: list[GameObject] = None, render_component: RenderComponent = None, scripts: list[tuple[type, list[any]]] = None) -> None:
         if children is None:
             children = []
         if scripts is None:
@@ -23,7 +23,7 @@ class GameObject:
         if self.render_component == None:
             self.render_component = RenderComponent("", "", False)
 
-        self.scripts = scripts # For converting to json
+        self.scripts = scripts # For converting to json, [(classname, [arg1, arg2, arg3])]
         self.components: list[MonoBehaviour] = []
 
         for script in scripts:
@@ -31,7 +31,14 @@ class GameObject:
         for child in self.children:
             child.parent = self
             
-    
+    def update_script_args(self, cls: type, args: list[any]):
+        for component in self.components:
+            if type(component) == cls:
+                component.end()
+        for script in self.scripts:
+            if script[0] == cls:
+                script[1] = args
+
     def destroy(self):
         if self.parent:
             self.parent.children.remove(self)

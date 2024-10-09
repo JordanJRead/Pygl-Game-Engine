@@ -60,7 +60,7 @@ class EditorCamera:
             move_vector.x -= 1
         if keys[pg.K_d]:
             move_vector.x += 1
-        if keys[pg.K_LCTRL]:
+        if keys[pg.K_LCTRL] or keys[pg.K_c]:
             move_vector.y -= 1
         if keys[pg.K_SPACE]:
             move_vector.y += 1

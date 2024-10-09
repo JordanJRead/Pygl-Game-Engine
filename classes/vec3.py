@@ -45,3 +45,32 @@ class Vec3:
     @staticmethod
     def zero():
         return Vec3(0, 0, 0)
+
+    @staticmethod
+    def one():
+        return Vec3(1, 1, 1)
+    
+    @staticmethod
+    def up():
+        return Vec3(0, 1, 0)
+    
+    @staticmethod
+    def down():
+        return Vec3(0, -1, 0)
+    
+    @staticmethod
+    def left():
+        return Vec3(-1, 0, 0)
+    
+    @staticmethod
+    def right():
+        return Vec3(1, 0, 0)
+    
+    @staticmethod
+    def forward():
+        return Vec3(0, 0, 1)
+    
+    
+    @staticmethod
+    def backward():
+        return Vec3(0, 0, -1)

@@ -4,10 +4,11 @@ from classes.vec3 import Vec3
 import pygame as pg
 from math import pi, cos, sin
 from OpenGL.GL import *
+from classes.gameobject import GameObject
 
 """This class changes the object's transform based on user input"""
 class PlayerMove(MonoBehaviour):
-    def __init__(self, game_object, app, speed: float, sens: float) -> None:
+    def __init__(self, game_object: GameObject, app, speed: float, sens: float) -> None:
         super().__init__(game_object, app)
         self.speed = speed
         self.sens = sens

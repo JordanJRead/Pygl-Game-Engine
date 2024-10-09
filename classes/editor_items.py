@@ -5,6 +5,7 @@ from classes.gameobject import GameObject
 from classes.transform import Transform
 from classes.vec3 import Vec3
 import inspect
+import typing
 
 class InputPanel:
     """A 2d grid of input fields with a function to be run when data is inputed"""
@@ -14,18 +15,18 @@ class InputPanel:
                  x_margin: float,
                  top_margin: float,
                  default_values: list[list],
-                 function: function,
+                 function: typing.Callable[[GameObject, list[list[pgui.elements.UITextEntryLine]], list[any]], None],
                  container: pgui.core.IContainerLikeInterface, 
                  ui_manager: pgui.UIManager,
                  title: str,
                  row_labels: list[str] | None = None,
                  item_labels: list[list[str]] | None = None,
-                 cls: type = None
+                func_data: list[any] = []
                  ) -> None:
         
         self.row_count = len(default_values)
         self.row_size = len(default_values[0])
-        self.cls = cls
+        self.func_data = func_data
 
         # Styling
         x_padding = 10
@@ -237,12 +238,12 @@ class Inspector(ScrollableContainer):
         self.input_panels: list[InputPanel] = []
 
     @staticmethod
-    def render_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], cls: type = None):
+    def render_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
         game_object.render_component.update_paths(rows[0][0].text, rows[1][0].text)
         game_object.render_component.is_bright = True
 
     @staticmethod
-    def transform_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], cls: type = None):
+    def transform_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
         try:
             new_transform = Transform(
                 Vec3(float(rows[0][0].text), float(rows[0][1].text), float(rows[0][2].text)),
@@ -254,16 +255,18 @@ class Inspector(ScrollableContainer):
             pass
 
     @staticmethod
-    def name_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], cls: type = None):
+    def name_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
         game_object.name = rows[0][0].text
     
     @staticmethod
-    def custom_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], cls: type):
+    def custom_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
+        cls = func_data[0]
         argspec = inspect.getfullargspec(cls.__init__)
         args = []
-        for row in rows:
+        for arg_index, row in enumerate(rows):
             arg_text = row[0].text
-            arg = argspec.annotations[arg_text](arg_text) # FIXME need arg name, not arg_text. can get from argspec?
+            arg_name = argspec.args[arg_index + 3]
+            arg = argspec.annotations[arg_name](arg_text) # FIXME need arg name, not arg_text. can get from argspec?
             args.append(arg)
         game_object.update_script_args(cls, args)
 
@@ -338,7 +341,7 @@ class Inspector(ScrollableContainer):
                 for i, arg in enumerate(script[1]):
                     default_values.append([str(arg)])
                     item_labels.append([inspect.getfullargspec(script[0].__init__).args[i + 3]])
-                component_panel = InputPanel(self.rect.width, x_margin, current_y, default_values, self.custom_component_update_function, self.panel, self.ui_manager, script[0].__qualname__, item_labels=item_labels, cls=script[0])
+                component_panel = InputPanel(self.rect.width, x_margin, current_y, default_values, self.custom_component_update_function, self.panel, self.ui_manager, script[0].__qualname__, item_labels=item_labels, func_data=[script[0]])
                 self.input_panels.append(component_panel)
                 current_y += component_panel.rect.height + y_margin
             self.y_distance = current_y - self.y_scroll

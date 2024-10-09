@@ -97,7 +97,8 @@ class Editor(App):
                 view_matrix=self.camera.get_view_matrix(),
                 fbo=0,
                 viewport=self.viewport,
-                flip=False
+                flip=False,
+                default_objects=True
                 )
             
             # UI
@@ -110,7 +111,7 @@ class Editor(App):
             glBindTexture(GL_TEXTURE_2D, self.ui_texture)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pg.image.tobytes(self.ui_surface, "RGBA"))
 
-            self.renderer.render_texture_to_quad(self.ui_texture, False)
+            self.renderer.render_texture_to_screen(self.ui_texture, False)
 
             # Move
             if self.is_moving:
@@ -210,7 +211,7 @@ class Editor(App):
                         for row in input_panel.rows:
                             for input_field in row:
                                 if event.ui_element == input_field:
-                                    input_panel.function(self.inspector.game_object, input_panel.rows, input_panel.cls)
+                                    input_panel.function(self.inspector.game_object, input_panel.rows, input_panel.func_data)
                                     self.hierarchy.build()
                                     self.inspector.set_game_object(self.selected_game_object) # Refresh
                                     self.unsave()

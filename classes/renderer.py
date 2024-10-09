@@ -3,6 +3,7 @@ import pygame_gui as pgui
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 from classes.gameobject import GameObject
+from classes.rendercomponent import RenderComponent
 import pyrr.matrix44 as mat4
 import numpy as np
 from math import tan, radians
@@ -51,8 +52,10 @@ class Renderer:
         
         glEnableVertexAttribArray(1)
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * 4, ctypes.c_void_p(3 * 4))
+        
+        self.default_render_component = RenderComponent("assets/objects/Default.txt", "assets/images/grey.png")
     
-    def render_objects_to_fbo(self, objects: list[GameObject], projection_matrix, view_matrix, fbo: int = 0, viewport: tuple[int, int, int, int] | None = None, flip = True):
+    def render_objects_to_fbo(self, objects: list[GameObject], projection_matrix, view_matrix, fbo: int = 0, viewport: tuple[int, int, int, int] | None = None, flip = True, default_objects: bool = False):
         # Frame setup
         glUseProgram(self.shader)
         glUniformMatrix4fv(glGetUniformLocation(self.shader, "viewMatrix"), 1, GL_FALSE, view_matrix)
@@ -65,24 +68,32 @@ class Renderer:
         glViewport(*viewport)
 
         for object in objects:
-            self.render_object(object)
+            self.render_object(object, default_objects)
         if flip:
             pg.display.flip()
         
         viewport = (0, 0, self.width, self.height)
         glViewport(*viewport)
 
-    def render_object(self, object: GameObject):
-            if object.render_component.is_active:
+    def render_object(self, object: GameObject, default_objects: bool):
+            if object.render_component.is_active or default_objects:
+                if not object.render_component.is_active:
+                    vao = self.default_render_component.vao
+                    texture2d = self.default_render_component.texture2d
+                    vertices = self.default_render_component.vertices
+                else:
+                    vao = object.render_component.vao
+                    texture2d = object.render_component.texture2d
+                    vertices = object.render_component.vertices
                 glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, object.local_transform.model_matrix)
                 glUniform1i(glGetUniformLocation(self.shader, "isBright"), object.render_component.is_bright)
-                object.render_component.texture2d.use()
-                glBindVertexArray(object.render_component.vao)
-                glDrawArrays(GL_TRIANGLES, 0, len(object.render_component.vertices))
+                texture2d.use()
+                glBindVertexArray(vao)
+                glDrawArrays(GL_TRIANGLES, 0, len(vertices))
             for child in object.children:
-                self.render_object(child)
+                self.render_object(child, default_objects)
     
-    def render_texture_to_quad(self, texture: int, clear=True):
+    def render_texture_to_screen(self, texture: int, clear=True):
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         if clear:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

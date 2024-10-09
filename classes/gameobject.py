@@ -35,9 +35,9 @@ class GameObject:
         for component in self.components:
             if type(component) == cls:
                 component.end()
-        for script in self.scripts:
+        for i, script in enumerate(self.scripts):
             if script[0] == cls:
-                script[1] = args
+                self.scripts[i] = [script[0], args]
 
     def destroy(self):
         if self.parent:

@@ -74,8 +74,8 @@ def load_obj(file_path: str) -> np.ndarray:
                 position = positions[indices[0]]
                 uv = uvs[indices[1]]
                 normal = normals[indices[2]]
-                vertices.extend([int(num) for num in position])
-                vertices.extend([int(num) for num in normal])
-                vertices.extend([int(num) for num in uv])
+                vertices.extend([float(num) for num in position])
+                vertices.extend([float(num) for num in normal])
+                vertices.extend([float(num) for num in uv])
         
         return np.array(vertices, dtype=np.float32)

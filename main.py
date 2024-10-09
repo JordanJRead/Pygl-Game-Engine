@@ -139,7 +139,7 @@ class App:
                 camera: Camera | None = self.get_camera(game_object)
                 if camera: break
             if camera:
-                self.renderer.render_texture_to_quad(camera.color_texture)
+                self.renderer.render_texture_to_screen(camera.color_texture)
 
             self.delta_time = self.clock.tick(self.FPS) / 1000
 

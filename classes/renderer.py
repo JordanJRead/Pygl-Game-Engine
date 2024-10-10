@@ -52,10 +52,8 @@ class Renderer:
         
         glEnableVertexAttribArray(1)
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * 4, ctypes.c_void_p(3 * 4))
-        
-        self.default_render_component = RenderComponent("assets/objects/Default.txt", "assets/images/grey.png")
     
-    def render_objects_to_fbo(self, objects: list[GameObject], projection_matrix, view_matrix, fbo: int = 0, viewport: tuple[int, int, int, int] | None = None, flip = True, default_objects: bool = False):
+    def render_objects_to_fbo(self, objects: list[GameObject], projection_matrix, view_matrix, fbo: int = 0, viewport: tuple[int, int, int, int] | None = None, flip = True, default_render_component: RenderComponent | None = None):
         # Frame setup
         glUseProgram(self.shader)
         glUniformMatrix4fv(glGetUniformLocation(self.shader, "viewMatrix"), 1, GL_FALSE, view_matrix)
@@ -68,19 +66,19 @@ class Renderer:
         glViewport(*viewport)
 
         for object in objects:
-            self.render_object(object, default_objects)
+            self.render_object(object, default_render_component)
         if flip:
             pg.display.flip()
         
         viewport = (0, 0, self.width, self.height)
         glViewport(*viewport)
 
-    def render_object(self, object: GameObject, default_objects: bool):
-            if object.render_component.is_active or default_objects:
+    def render_object(self, object: GameObject, default_render_component: RenderComponent | None = None):
+            if object.render_component.is_active or default_render_component:
                 if not object.render_component.is_active:
-                    vao = self.default_render_component.vao
-                    texture2d = self.default_render_component.texture2d
-                    vertices = self.default_render_component.vertices
+                    vao = default_render_component.vao
+                    texture2d = default_render_component.texture2d
+                    vertices = default_render_component.vertices
                 else:
                     vao = object.render_component.vao
                     texture2d = object.render_component.texture2d
@@ -91,7 +89,7 @@ class Renderer:
                 glBindVertexArray(vao)
                 glDrawArrays(GL_TRIANGLES, 0, len(vertices))
             for child in object.children:
-                self.render_object(child, default_objects)
+                self.render_object(child, default_render_component)
     
     def render_texture_to_screen(self, texture: int, clear=True):
         glBindFramebuffer(GL_FRAMEBUFFER, 0)

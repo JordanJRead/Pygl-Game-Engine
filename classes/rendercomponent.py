@@ -12,6 +12,7 @@ class RenderComponent:
             self.is_active = False
         self.is_bright = False
         if self.is_active:
+            self.vertice_data_size = 8
             self.vertices = load_obj(obj_path)
 
             self.vbo = glGenBuffers(1)

@@ -42,6 +42,11 @@ class Vec3:
             return self / abs(self)
         return self
     
+    def cross(self, other):
+        if type(other) != Vec3:
+            raise TypeError
+        return Vec3(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x)
+    
     @staticmethod
     def zero():
         return Vec3(0, 0, 0)
@@ -69,7 +74,6 @@ class Vec3:
     @staticmethod
     def forward():
         return Vec3(0, 0, 1)
-    
     
     @staticmethod
     def backward():

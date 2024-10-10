@@ -3,6 +3,7 @@ import pygame as pg
 import pygame_gui as pgui
 from classes.gameobject import GameObject
 from classes.editorcamera import EditorCamera
+from classes.rendercomponent import RenderComponent
 from classes.colors import Colors
 from classes.editor_items import *
 from OpenGL.GL import *
@@ -15,6 +16,7 @@ class Editor(App):
         super().__init__(width, height, FPS)
 
     def init_ui(self):
+        self.default_render_component = RenderComponent("assets/objects/Default.txt", "assets/images/grey.png")
         self.window_name = "Editor"
         self.unsaved_window_name = "*Editor"
         self.is_saved = True
@@ -98,7 +100,7 @@ class Editor(App):
                 fbo=0,
                 viewport=self.viewport,
                 flip=False,
-                default_objects=True
+                default_render_component=self.default_render_component
                 )
             
             # UI

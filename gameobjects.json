@@ -58,114 +58,11 @@
           "z": 1.0
         }
       },
-      "children": [
-        {
-          "name": "cube1",
-          "transform": {
-            "pos": {
-              "x": 1.0,
-              "y": 0.0,
-              "z": 5.0
-            },
-            "rot": {
-              "x": 0.0,
-              "y": 0.0,
-              "z": 0.0
-            },
-            "scale": {
-              "x": 1.0,
-              "y": 1.0,
-              "z": 1.0
-            }
-          },
-          "children": [
-            {
-              "name": "cube2",
-              "transform": {
-                "pos": {
-                  "x": 1.0,
-                  "y": -3.0,
-                  "z": 0.0
-                },
-                "rot": {
-                  "x": 0.0,
-                  "y": 0.0,
-                  "z": 0.0
-                },
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0,
-                  "z": 1.0
-                }
-              },
-              "children": [],
-              "render_component": {
-                "obj_path": "assets/objects/Cube.txt",
-                "image_path": "assets/images/orangecube.png"
-              },
-              "scripts": []
-            }
-          ],
-          "render_component": {
-            "obj_path": "assets/objects/Cube.txt",
-            "image_path": "assets/images/test.png"
-          },
-          "scripts": []
-        }
-      ],
+      "children": [],
       "render_component": {
         "obj_path": "assets/objects/Cube.txt",
         "image_path": "assets/images/test.png"
       },
-      "scripts": []
-    },
-    {
-      "name": "???",
-      "transform": {
-        "pos": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "rot": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": {
-          "x": 1.0,
-          "y": 1.0,
-          "z": 1.0
-        }
-      },
-      "children": [],
-      "render_component": {
-        "obj_path": "assets/objects/cube.txt",
-        "image_path": "assets/images/redcube.png"
-      },
-      "scripts": []
-    },
-    {
-      "name": "New Object",
-      "transform": {
-        "pos": {
-          "x": 0.3,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "rot": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": {
-          "x": 1.0,
-          "y": 1.0,
-          "z": 1.0
-        }
-      },
-      "children": [],
-      "render_component": null,
       "scripts": []
     }
   ]

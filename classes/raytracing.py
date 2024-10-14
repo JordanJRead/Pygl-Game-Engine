@@ -31,7 +31,8 @@ def ray_triangle_intersection(origin: Vec3, dir: Vec3, triangle_points: list[Vec
     t = inv_det * (edge_2 * s_cross_e1)
 
     if t > epsilon:
-        return Vec3(origin + dir * t)
+        # return origin + dir * t
+        return t
     return None
 
 def find_t_of_game_object(origin: Vec3, dir: Vec3, game_object: GameObject, view_matrix, default_render_component: RenderComponent | None = None) -> float:
@@ -50,14 +51,14 @@ def find_t_of_game_object(origin: Vec3, dir: Vec3, game_object: GameObject, view
                 Vec3(render_component.vertices[triangle_start_index + render_component.vertice_data_size * 2], render_component.vertices[triangle_start_index + render_component.vertice_data_size * 2 + 1], render_component.vertices[triangle_start_index + render_component.vertice_data_size * 2 + 2])
             ]
             world_triangle_points: list[Vec3] = [
-                model_triangle_points[0].mat_mul(game_object.local_transform.model_matrix),
-                model_triangle_points[1].mat_mul(game_object.local_transform.model_matrix),
-                model_triangle_points[2].mat_mul(game_object.local_transform.model_matrix)
+                model_triangle_points[0].mat_mul(game_object.local_transform.model_matrix, True),
+                model_triangle_points[1].mat_mul(game_object.local_transform.model_matrix, True),
+                model_triangle_points[2].mat_mul(game_object.local_transform.model_matrix, True)
             ]
             view_triangle_points: list[Vec3] = [
-                model_triangle_points[0].mat_mul(view_matrix),
-                model_triangle_points[1].mat_mul(view_matrix),
-                model_triangle_points[2].mat_mul(view_matrix)
+                world_triangle_points[0].mat_mul(view_matrix, True),
+                world_triangle_points[1].mat_mul(view_matrix, True),
+                world_triangle_points[2].mat_mul(view_matrix, True)
             ]
             t_value = ray_triangle_intersection(origin, dir, view_triangle_points)
             if t_value and smallest_t:
@@ -65,7 +66,7 @@ def find_t_of_game_object(origin: Vec3, dir: Vec3, game_object: GameObject, view
                     smallest_t = t_value
             elif not smallest_t and t_value:
                 smallest_t = t_value
-    return None
+    return smallest_t
 
 def ray_cast_game_objects(origin: Vec3, dir: Vec3, game_objects: list[GameObject], view_matrix, default_render_component: RenderComponent | None = None) -> GameObject | None:
     """Given a ray in camera space, returns the hit game object if it exists"""

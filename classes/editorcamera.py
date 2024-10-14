@@ -1,5 +1,5 @@
 import pygame as pg
-from math import pi, sin, cos, tan, radians
+from math import pi, sin, cos, tan, radians, atan, degrees
 from classes.vec3 import Vec3
 import pyrr.matrix44 as mat4
 import numpy as np
@@ -20,6 +20,8 @@ class EditorCamera:
         self.far_distance = far_distance
         self.horizontal_fov_deg = horizontal_fov_deg
         self.aspect_ratio = aspect_ratio
+        vertical_fov_rad = atan(tan(radians(horizontal_fov_deg / 2)) * self.aspect_ratio) * 2
+        self.vertical_fov_deg = degrees(vertical_fov_rad)
         self.projection_matrix = self.get_projection_matrix()
 
     def update(self, delta_time):

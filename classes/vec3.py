@@ -1,5 +1,5 @@
 from math import sqrt
-import pyrr.matrix44 as mat4
+from collections import namedtuple
 import numpy as np
 
 class Vec3:
@@ -20,7 +20,8 @@ class Vec3:
         raise TypeError
     
     def __mul__(self, other):
-        if type(other) in [float, int]:
+        a = type(other)
+        if type(other) in [float, int, np.float64, np.float32]:
             return Vec3(self.x * other, self.y * other, self.z * other)
         elif type(other) == Vec3: # Dot product
             return self.x * other.x + self.y * other.y + self.z * other.z
@@ -61,17 +62,22 @@ class Vec3:
             raise TypeError
         return Vec3(self.x / other.x, self.y / other.y, self.z / other.z)
     
-    def mat_mul(self, other) -> tuple[float, float, float, float]:
-        """Vec3 times a 4x4 row-majored matrix"""
+    def mat_mul(self, other, transpose = False):
+        """Vec3 times a 4x4 row-majored matrix. Returns a Vec3"""
         if type(other) == np.ndarray and type(other[0]) == np.ndarray:
-            # Vec4 = namedtuple('Vec4', "x y z w")
-            # self4 = Vec4(self.x, self.y, self.z, 1)
-            # return Vec3(
-            #     self4.x * other[0][0] + self4.y * other[0][1] + self4.z * other[0][2] + self4.w * other[0][3],
-            #     self4.x * other[1][0] + self4.y * other[1][1] + self4.z * other[1][2] + self4.w * other[1][3],
-            #     self4.x * other[2][0] + self4.y * other[2][1] + self4.z * other[2][2] + self4.w * other[2][3]
-            # )
-            return mat4.multiply(other, [self.x, self.y, self.z, 1])
+            Vec4 = namedtuple('Vec4', "x y z w")
+            self4 = Vec4(self.x, self.y, self.z, 1)
+            if transpose:
+                return Vec3(
+                    self4.x * other[0][0] + self4.y * other[1][0] + self4.z * other[2][0] + self4.w * other[3][0],
+                    self4.x * other[0][1] + self4.y * other[1][1] + self4.z * other[2][1] + self4.w * other[3][1],
+                    self4.x * other[0][2] + self4.y * other[1][2] + self4.z * other[2][2] + self4.w * other[3][2]
+                )
+            return Vec3(
+                self4.x * other[0][0] + self4.y * other[0][1] + self4.z * other[0][2] + self4.w * other[0][3],
+                self4.x * other[1][0] + self4.y * other[1][1] + self4.z * other[1][2] + self4.w * other[1][3],
+                self4.x * other[2][0] + self4.y * other[2][1] + self4.z * other[2][2] + self4.w * other[2][3]
+            )
         raise TypeError
     
     @staticmethod

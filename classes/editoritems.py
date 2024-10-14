@@ -239,7 +239,7 @@ class Inspector(ScrollableContainer):
 
     @staticmethod
     def render_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
-        game_object.render_component.update_paths(rows[0][0].text, rows[1][0].text)
+        game_object.render_component.update_paths("assets/objects/" + rows[0][0].text, "assets/images/" + rows[1][0].text)
         game_object.render_component.is_bright = True
 
     @staticmethod

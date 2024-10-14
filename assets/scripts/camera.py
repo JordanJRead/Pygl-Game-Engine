@@ -1,6 +1,6 @@
 from __future__ import annotations
 from classes.gameobject import GameObject
-from math import tan, radians
+from math import tan, radians, atan, degrees
 import numpy as np
 from OpenGL.GL import *
 from classes.monobehaviour import MonoBehaviour
@@ -17,6 +17,8 @@ class Camera(MonoBehaviour):
         self.far_distance = far_distance
         self.aspect_ratio = self.app.width / self.app.height
         self.horizontal_fov_deg = horizontal_fov_deg
+        vertical_fov_rad = atan(tan(radians(horizontal_fov_deg / 2)) * self.aspect_ratio) * 2
+        self.vertical_fov_deg = degrees(vertical_fov_rad)
         self.projection_matrix = self.get_projection_matrix()
     
         # Framebuffer

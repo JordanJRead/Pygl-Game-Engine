@@ -5,12 +5,13 @@ from classes.gameobject import GameObject
 from classes.editorcamera import EditorCamera
 from classes.rendercomponent import RenderComponent
 from classes.colors import Colors
-from classes.editor_items import *
+from classes.editoritems import *
 from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
 import json
 from classes import raytracing
+from math import tan, radians
 # TODO clean up hierarchy code
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
@@ -60,6 +61,8 @@ class Editor(App):
         self.creation_buttons = CreationButtons(self.hierarchy.rect, self.ui_manager)
 
     def select_game_object(self, game_object: GameObject):
+        if game_object is None:
+            game_object = self.selected_game_object # Deselect
         self.inspector.set_game_object(game_object)
 
         # Disable
@@ -121,6 +124,15 @@ class Editor(App):
                 self.camera.update(self.delta_time)
             self.delta_time = self.clock.tick(self.FPS) / 1000
 
+    def dir_from_pixels(self, pos):
+        remapped_pos = [pos[0] - self.viewport_rect.centerx, pos[1] - self.viewport_rect.centery]
+        norm_pos = [remapped_pos[0] // self.viewport_rect.width // 2, remapped_pos[1] // self.viewport_rect.height // 2]
+        return Vec3(
+            norm_pos[0] * tan(radians(self.camera.horizontal_fov_deg)),
+            norm_pos[1] * tan(radians(self.camera.vertical_fov_deg)),
+            1
+        )
+
     def check_events(self, keys):
         for event in pg.event.get():
             match event.type:
@@ -139,8 +151,10 @@ class Editor(App):
 
                 # Move in scene
                 case pg.MOUSEBUTTONDOWN:
+
+                    # Select object with raycasting
                     if event.button == 1:
-                        self.select_game_object(raytracing.ray_cast_game_objects(Vec3.zero(), Vec3.forward(), self.game_objects, self.camera.get_view_matrix()))
+                        self.select_game_object(raytracing.ray_cast_game_objects(Vec3.zero(), self.dir_from_pixels(pg.mouse.get_pos()), self.game_objects, self.camera.get_view_matrix(), self.default_render_component))
                     if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
                         self.camera.prev_mouse_position = pg.mouse.get_pos()
                         self.is_moving = True

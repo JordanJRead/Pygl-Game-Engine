@@ -10,6 +10,7 @@ from OpenGL.GL import *
 from typing import TypedDict
 from typing import Any
 import json
+from classes import raytracing
 # TODO clean up hierarchy code
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
@@ -138,6 +139,8 @@ class Editor(App):
 
                 # Move in scene
                 case pg.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.select_game_object(raytracing.ray_cast_game_objects(Vec3.zero(), Vec3.forward(), self.game_objects, self.camera.get_view_matrix()))
                     if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
                         self.camera.prev_mouse_position = pg.mouse.get_pos()
                         self.is_moving = True

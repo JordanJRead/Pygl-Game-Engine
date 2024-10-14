@@ -16,7 +16,7 @@ def ray_triangle_intersection(origin: Vec3, dir: Vec3, triangle_points: list[Vec
         return None
     
     inv_det = 1 / det
-    s = dir - triangle_points[0]
+    s = origin - triangle_points[0]
     u = inv_det * (s * ray_cross_e2)
 
     if u < 0 or u > 1:
@@ -68,6 +68,7 @@ def find_t_of_game_object(origin: Vec3, dir: Vec3, game_object: GameObject, view
                 smallest_t = t_value
     return smallest_t
 
+# FIXME children?
 def ray_cast_game_objects(origin: Vec3, dir: Vec3, game_objects: list[GameObject], view_matrix, default_render_component: RenderComponent | None = None) -> GameObject | None:
     """Given a ray in camera space, returns the hit game object if it exists"""
     smallest_t = None

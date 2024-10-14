@@ -125,13 +125,11 @@ class Editor(App):
             self.delta_time = self.clock.tick(self.FPS) / 1000
 
     def dir_from_pixels(self, pos):
-        remapped_pos = [pos[0] - self.viewport_rect.centerx, pos[1] - self.viewport_rect.centery]
-        norm_pos = [remapped_pos[0] // self.viewport_rect.width // 2, remapped_pos[1] // self.viewport_rect.height // 2]
-        return Vec3(
-            norm_pos[0] * tan(radians(self.camera.horizontal_fov_deg)),
-            norm_pos[1] * tan(radians(self.camera.vertical_fov_deg)),
-            1
+        distance_from_center = [pos[0] - self.viewport_rect.centerx, pos[1] - self.viewport_rect.centery]
+        result = Vec3(
+            distance_from_center[0], -distance_from_center[1], self.viewport_rect.width / 2 / tan(radians(self.camera.horizontal_fov_deg / 2))
         )
+        return result
 
     def check_events(self, keys):
         for event in pg.event.get():

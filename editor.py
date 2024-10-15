@@ -151,9 +151,10 @@ class Editor(App):
                 case pg.MOUSEBUTTONDOWN:
 
                     # Select object with raycasting
-                    if event.button == 1:
+                    if event.button == 1 and self.viewport_rect.collidepoint(pg.mouse.get_pos()):
                         self.select_game_object(raytracing.ray_cast_game_objects(Vec3.zero(), self.dir_from_pixels(pg.mouse.get_pos()), self.game_objects, self.camera.get_view_matrix(), self.default_render_component))
-                    if event.button == 3 and self.viewport_rect.collidepoint(*pg.mouse.get_pos()):
+
+                    if event.button == 3 and self.viewport_rect.collidepoint(pg.mouse.get_pos()):
                         self.camera.prev_mouse_position = pg.mouse.get_pos()
                         self.is_moving = True
                 case pg.MOUSEBUTTONUP:

@@ -120,7 +120,7 @@ class InputPanel:
         elif length > max_letters:
             return 0.9
         else:
-            percent = length * 8 / max_width
+            percent = length * 10 / max_width
             if percent > 0.9:
                 return 0.9
             return percent

@@ -137,9 +137,10 @@ class Editor(App):
 
                 # Closing
                 case pg.QUIT:
-                    self.running = False
+                    if self.is_saved:
+                        self.running = False
                 case pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
+                    if event.key == pg.K_ESCAPE and self.is_saved:
                         self.running = False
                     # Delete
                     if event.key == pg.K_DELETE:
@@ -248,6 +249,7 @@ class Editor(App):
             self.unsave()
 
     def save(self, path: str = "gameobjects.json"):
+        self.is_saved = True
         pg.display.set_caption(self.window_name)
         # Types
         Vec3Dict = TypedDict('Vec3Dict', {"x": float, "y": float, "z": float})
@@ -285,7 +287,7 @@ class Editor(App):
 
         # Scripts
         script_dict_list: list[ScriptDict] = []
-        for script in game_object.scripts:
+        for script in game_object.script_data:
             script_dict: ScriptDict = {"name": script[0].__name__, "args": script[1]}
             script_dict_list.append(script_dict)
 

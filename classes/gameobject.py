@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 # Scripts is a list of (classtype, arguments)
 class GameObject:
-    def __init__(self, app: App, name: str, local_transform: Transform = Transform.identity(), children: list[GameObject] = None, render_component: RenderComponent = None, scripts: list[tuple[type, list[any]]] = None) -> None:
+    def __init__(self, app: App, name: str, local_transform: Transform = Transform.identity(), children: list[GameObject] = None, render_component: RenderComponent = None, script_data: list[tuple[type, list[any]]] = None) -> None:
         if children is None:
             children = []
-        if scripts is None:
-            scripts = []
+        if script_data is None:
+            script_data = []
         self.parent: GameObject | None = None
         self.app = app
         self.children = children
@@ -23,10 +23,10 @@ class GameObject:
         if self.render_component == None:
             self.render_component = RenderComponent("", "", False)
 
-        self.scripts = scripts # For converting to json, [(classname, [arg1, arg2, arg3])]
+        self.script_data = script_data # For converting to json, [(classname, [arg1, arg2, arg3])]
         self.components: list[MonoBehaviour] = []
 
-        for script in scripts:
+        for script in script_data:
             self.components.append(script[0](self, self.app, *script[1]))
         for child in self.children:
             child.parent = self
@@ -35,9 +35,9 @@ class GameObject:
         for component in self.components:
             if type(component) == cls:
                 component.end()
-        for i, script in enumerate(self.scripts):
+        for i, script in enumerate(self.script_data):
             if script[0] == cls:
-                self.scripts[i] = [script[0], args]
+                self.script_data[i] = [script[0], args]
 
     def destroy(self):
         if self.parent:

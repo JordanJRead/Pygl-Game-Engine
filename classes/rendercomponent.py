@@ -40,7 +40,6 @@ class RenderComponent:
             glDeleteVertexArrays(1, (self.vao,))
     
     def update_paths(self, obj_path: str, image_path: str):
-        print("here")
         self.destroy()
         self.__init__(obj_path, image_path)
 

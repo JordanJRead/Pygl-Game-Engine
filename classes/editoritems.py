@@ -6,6 +6,7 @@ from classes.transform import Transform
 from classes.vec3 import Vec3
 import inspect
 import typing
+from pydoc import locate
 
 class InputPanel:
     """A 2d grid of input fields with a function to be run when data is inputed"""
@@ -260,15 +261,27 @@ class Inspector(ScrollableContainer):
     
     @staticmethod
     def custom_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
-        cls = func_data[0]
-        argspec = inspect.getfullargspec(cls.__init__)
+        class_ = func_data[0]
+        argspec = inspect.getfullargspec(class_.__init__)
         args = []
         for arg_index, row in enumerate(rows):
-            arg_text = row[0].text
+            new_arg_text = row[0].text
             arg_name = argspec.args[arg_index + 3]
-            arg = argspec.annotations[arg_name](arg_text) # FIXME need arg name, not arg_text. can get from argspec?
+            arg = argspec.annotations[arg_name](new_arg_text)
             args.append(arg)
-        game_object.update_script_args(cls, args)
+        game_object.update_script_args(class_, args)
+    
+    @staticmethod
+    def add_component_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
+        class_text = rows[0][0].text
+        class_ = locate("assets.scripts." + class_text.lower() + "." + class_text)
+        argspec = inspect.getfullargspec(class_.__init__)
+        arg_count = len(argspec.args) - 3
+        args = []
+        for i in range(arg_count):
+            args.append(None)
+        game_object.script_data.append((class_, args))
+
 
     def set_game_object(self, game_object: GameObject | None):
         if game_object is None:
@@ -323,7 +336,7 @@ class Inspector(ScrollableContainer):
             current_y += transform_panel.rect.height + y_margin
 
             # Render object panel
-            default_values = [[game_object.render_component.obj_path], [game_object.render_component.image_path]]
+            default_values = [[game_object.render_component.obj_path.removeprefix("assets/objects/")], [game_object.render_component.image_path.removeprefix("assets/images/")]]
             item_labels = []
             item_labels.append(["Obj File"])
             item_labels.append(["Image File"])
@@ -335,7 +348,7 @@ class Inspector(ScrollableContainer):
             current_y += render_component_panel.rect.height + y_margin
 
             # Component panels
-            for script in game_object.scripts:
+            for script in game_object.script_data:
                 default_values = []
                 item_labels = []
                 for i, arg in enumerate(script[1]):
@@ -344,6 +357,12 @@ class Inspector(ScrollableContainer):
                 component_panel = InputPanel(self.rect.width, x_margin, current_y, default_values, self.custom_component_update_function, self.panel, self.ui_manager, script[0].__qualname__, item_labels=item_labels, func_data=[script[0]])
                 self.input_panels.append(component_panel)
                 current_y += component_panel.rect.height + y_margin
+            
+            # Add component panel
+            add_component_panel = InputPanel(self.rect.width, x_margin, current_y, [[""]], self.add_component_function, self.panel, self.ui_manager, "Add Component")
+            self.input_panels.append(add_component_panel)
+            current_y += add_component_panel.rect.height + y_margin
+
             self.y_distance = current_y - self.y_scroll
 
 class CreationButtons:

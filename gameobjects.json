@@ -63,6 +63,40 @@
         "obj_path": "assets/objects/Cube.txt",
         "image_path": "assets/images/test.png"
       },
+      "scripts": [
+        {
+          "name": "PlayerMove",
+          "args": [
+            3.0,
+            0.1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Compass",
+      "transform": {
+        "pos": {
+          "x": 0.0,
+          "y": -2.0,
+          "z": 0.0
+        },
+        "rot": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": {
+          "x": 2.0,
+          "y": 1.0,
+          "z": 2.0
+        }
+      },
+      "children": [],
+      "render_component": {
+        "obj_path": "assets/objects/Cube.txt",
+        "image_path": "assets/images/compass.png"
+      },
       "scripts": []
     }
   ]

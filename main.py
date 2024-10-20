@@ -105,7 +105,7 @@ class App:
             ),
             children=children,
             render_component= render_component,
-            scripts=scripts,
+            script_data=scripts,
         )
         return game_object
     

@@ -12,17 +12,18 @@ class InputPanel:
     """A 2d grid of input fields with a function to be run when data is inputed"""
     def __init__(
                 self,
-                 parent_width: float,
-                 x_margin: float,
-                 top_margin: float,
-                 default_values: list[list],
-                 function: typing.Callable[[GameObject, list[list[pgui.elements.UITextEntryLine]], list[any]], None],
-                 container: pgui.core.IContainerLikeInterface, 
-                 ui_manager: pgui.UIManager,
-                 title: str,
-                 row_labels: list[str] | None = None,
-                 item_labels: list[list[str]] | None = None,
-                func_data: list[any] = []
+                parent_width: float,
+                x_margin: float,
+                top_margin: float,
+                default_values: list[list],
+                function: typing.Callable[[GameObject, list[list[pgui.elements.UITextEntryLine]], list[any]], None],
+                container: pgui.core.IContainerLikeInterface, 
+                ui_manager: pgui.UIManager,
+                title: str,
+                row_labels: list[str] | None = None,
+                item_labels: list[list[str]] | None = None,
+                func_data: list[any] = [],
+                delete_function: typing.Callable[[GameObject, list[list[pgui.elements.UITextEntryLine]], list[any]], None] | None = None
                  ) -> None:
         
         self.row_count = len(default_values)
@@ -30,6 +31,9 @@ class InputPanel:
         self.func_data = func_data
 
         # Styling
+        delete_button_size = 50
+        delete_button_padding = 10
+
         x_padding = 10
         text_y_margin = 5
         text_height = 30
@@ -55,7 +59,9 @@ class InputPanel:
         self.rect = pg.Rect(x_margin, top_margin, width, height)
 
         self.function = function
-        ui_manager = ui_manager
+        self.delete_function = delete_function
+        self.delete_button: pgui.elements.UIButton | None = None
+        self.ui_manager = ui_manager
 
         self.panel = pgui.elements.UIPanel(self.rect, manager=ui_manager, container=container, object_id="@dark_panel")
         self.rows: list[list[pgui.elements.UITextEntryLine]] = []
@@ -65,8 +71,10 @@ class InputPanel:
         current_y += text_y_margin
 
         # Drawing
-        # Title
+        # Title / delete button
         self.texts.append(pgui.elements.UILabel(pg.Rect(x_padding, current_y, padded_width, text_height), title, anchors={"centerx": "centerx"}, parent_element=self.panel, container=self.panel, object_id="@bold_text"))
+        if self.delete_function:
+            self.delete_button = pgui.elements.UIButton(pg.Rect(self.rect.width - delete_button_padding - delete_button_size, delete_button_padding, delete_button_size, delete_button_size), "", self.ui_manager, container=self.panel, parent_element=self.panel, object_id="@delete_button")
         current_y += text_height
         current_y += text_y_margin
 
@@ -282,6 +290,10 @@ class Inspector(ScrollableContainer):
             args.append(None)
         game_object.script_data.append((class_, args))
 
+    @staticmethod
+    def delete_custom_component(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
+        class_ = func_data[0]
+        game_object.script_data = [x for x in game_object.script_data if x[0] != class_]
 
     def set_game_object(self, game_object: GameObject | None):
         if game_object is None:
@@ -354,7 +366,7 @@ class Inspector(ScrollableContainer):
                 for i, arg in enumerate(script[1]):
                     default_values.append([str(arg)])
                     item_labels.append([inspect.getfullargspec(script[0].__init__).args[i + 3]])
-                component_panel = InputPanel(self.rect.width, x_margin, current_y, default_values, self.custom_component_update_function, self.panel, self.ui_manager, script[0].__qualname__, item_labels=item_labels, func_data=[script[0]])
+                component_panel = InputPanel(self.rect.width, x_margin, current_y, default_values, self.custom_component_update_function, self.panel, self.ui_manager, script[0].__qualname__, item_labels=item_labels, func_data=[script[0]], delete_function=self.delete_custom_component)
                 self.input_panels.append(component_panel)
                 current_y += component_panel.rect.height + y_margin
             

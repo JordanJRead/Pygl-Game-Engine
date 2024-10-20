@@ -200,6 +200,12 @@ class Editor(App):
                                 self.select_game_object(self.hierarchy.game_object_buttons[button])
                             break
                     
+                    # Delete component
+                    for input_panel in self.inspector.input_panels:
+                        if event.ui_element == input_panel.delete_button:
+                            input_panel.delete_function(self.inspector.game_object, input_panel.rows, input_panel.func_data)
+                            self.inspector.build(self.inspector.game_object)
+
                     match event.ui_element:
                         # Create object
                         case self.creation_buttons.create_top_level_button:

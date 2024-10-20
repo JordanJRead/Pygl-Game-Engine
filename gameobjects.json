@@ -63,15 +63,7 @@
         "obj_path": "assets/objects/Cube.txt",
         "image_path": "assets/images/test.png"
       },
-      "scripts": [
-        {
-          "name": "PlayerMove",
-          "args": [
-            3.0,
-            0.1
-          ]
-        }
-      ]
+      "scripts": []
     },
     {
       "name": "Compass",

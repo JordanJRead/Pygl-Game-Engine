@@ -143,7 +143,7 @@ class InputPanel:
             text.kill()
 
 class ScrollableContainer:
-    """Children should have a build function, set the x_distance/y variable, and use x/y_scroll in building themselves"""
+    """Children should have a build function, set the x/y_distance variable, and use x/y_scroll in building themselves. x/y_distance is the size of the content I think"""
     def __init__(self) -> None:
         self.x_scroll = 0
         self.y_scroll = 0
@@ -396,3 +396,10 @@ class CreationButtons:
     def disable_child_button(self):
         self.child_button.kill()
         self.child_button = pgui.elements.UIButton(self.child_button_rect, "Create Child Game Object", object_id="@grey_button")
+    
+class FileDisplay(ScrollableContainer):
+    def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager) -> None:
+        super().__init__()
+        self.ui_manager = ui_manager
+        self.rect = rect
+        self.panel = pgui.elements.UIPanel(rect, manager=self.ui_manager)

@@ -60,7 +60,7 @@
       },
       "children": [],
       "render_component": {
-        "obj_path": "assets/objects/Cube.txt",
+        "obj_path": "assets/objects/Cube.obj",
         "image_path": "assets/images/test.png"
       },
       "scripts": []
@@ -86,7 +86,7 @@
       },
       "children": [],
       "render_component": {
-        "obj_path": "assets/objects/Cube.txt",
+        "obj_path": "assets/objects/Cube.obj",
         "image_path": "assets/images/compass.png"
       },
       "scripts": []

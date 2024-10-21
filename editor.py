@@ -18,7 +18,7 @@ class Editor(App):
         super().__init__(width, height, FPS)
 
     def init_ui(self):
-        self.default_render_component = RenderComponent("assets/objects/Default.txt", "assets/images/grey.png")
+        self.default_render_component = RenderComponent("assets/objects/Default.obj", "assets/images/grey.png")
         self.window_name = "Editor"
         self.unsaved_window_name = "*Editor"
         self.is_saved = True
@@ -59,6 +59,11 @@ class Editor(App):
 
         # Create buttons
         self.creation_buttons = CreationButtons(self.hierarchy.rect, self.ui_manager)
+
+        # File display
+        file_display_y_padding = 25
+        file_display_rect = pg.Rect(self.viewport_rect.left, self.viewport_rect.bottom + file_display_y_padding, self.viewport_rect.width, self.height - file_display_y_padding * 2 - self.viewport_rect.bottom)
+        self.file_display = FileDisplay(file_display_rect, self.ui_manager)
 
     def select_game_object(self, game_object: GameObject):
         if game_object is None:
@@ -176,7 +181,6 @@ class Editor(App):
                             hovered_object.update_y_scroll(event.y * 20)
                         hovered_object.build(self.selected_game_object)
                 
-
                 # Buttons
                 case pgui.UI_BUTTON_PRESSED:
 
@@ -205,6 +209,7 @@ class Editor(App):
                         if event.ui_element == input_panel.delete_button:
                             input_panel.delete_function(self.inspector.game_object, input_panel.rows, input_panel.func_data)
                             self.inspector.build(self.inspector.game_object)
+                            self.inspector.update_y_scroll(0)
 
                     match event.ui_element:
                         # Create object

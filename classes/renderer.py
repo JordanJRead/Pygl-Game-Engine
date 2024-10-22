@@ -83,6 +83,7 @@ class Renderer:
                     vao = object.render_component.vao
                     texture2d = object.render_component.texture2d
                     vertices = object.render_component.vertices
+                    print(object.local_transform.model_matrix)
                 glUniformMatrix4fv(glGetUniformLocation(self.shader, "modelMatrix"), 1, GL_FALSE, object.local_transform.model_matrix)
                 glUniform1i(glGetUniformLocation(self.shader, "isBright"), object.render_component.is_bright)
                 texture2d.use()

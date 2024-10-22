@@ -92,7 +92,6 @@ class Editor(App):
         self.running = True
         self.delta_time = self.clock.tick(self.FPS) / 1000
         while self.running:
-
             keys = pg.key.get_pressed()
             if keys[pg.K_s] and keys[pg.K_LCTRL]:
                 self.save()
@@ -142,10 +141,10 @@ class Editor(App):
 
                 # Closing
                 case pg.QUIT:
-                    if self.is_saved:
-                        self.running = False
+                    #if self.is_saved:
+                    self.running = False
                 case pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE and self.is_saved:
+                    if event.key == pg.K_ESCAPE:# and self.is_saved:
                         self.running = False
                     # Delete
                     if event.key == pg.K_DELETE:

@@ -43,39 +43,84 @@ class RenderComponent:
         self.destroy()
         self.__init__(obj_path, image_path)
 
+# TODO add dynamic format support (some objs only have positions, or seperate their vertices with spaces or varying amounts of slashes)
 def load_obj(file_path: str) -> np.ndarray:
-        vertices: list[float] = [] # x y z nx ny nz u v x y z nx ny nz u v...
+    vertices: list[float] = [] # x y z nx ny nz u v x y z nx ny nz u v...
 
-        faces: list[str] = [] # ["1/6/3", "p/t/n"] 
-        positions = [] # [["x", "y", "z"], ["x", "y", "z"]...]
-        normals = [] # [["x", "y", "z"], ["x", "y", "z"]...]
-        uvs = [] # [["u", "v"], ["u", "v"], ["u", "v"]...]
-        with open(file_path) as file:
-            file = [l.strip('\n\r') for l in file]
-            for line in file:
-                split_line = line.split(" ")
-                split_line = [x for x in split_line if x != ""]
-                match split_line[0]:
-                    case "v":
-                        positions.append([split_line[1], split_line[2], split_line[3]])
-                    case "vt":
-                        uvs.append([split_line[1], split_line[2]])
-                    case "vn":
-                        normals.append([split_line[1], split_line[2], split_line[3]])
-                    case "f":
-                        # A triangle. Each index (1, 2, 3) is a vertice
-                        faces.append(split_line[1]) # "0/0/0"
-                        faces.append(split_line[2])
-                        faces.append(split_line[3])
-                        
-            for face in faces:
-                indices = face.split("/") # ["1", "6", "3"]
-                indices = [int(num) for num in indices]
-                position = positions[indices[0]]
-                uv = uvs[indices[1]]
-                normal = normals[indices[2]]
-                vertices.extend([float(num) for num in position])
-                vertices.extend([float(num) for num in normal])
-                vertices.extend([float(num) for num in uv])
+    faces: list[str] = [] # ["1/6/3", "p/t/n"] 
+    positions = [] # [["x", "y", "z"], ["x", "y", "z"]...]
+    normals = [] # [["x", "y", "z"], ["x", "y", "z"]...]
+    uvs = [] # [["u", "v"], ["u", "v"], ["u", "v"]...]
+    with open(file_path) as file:
+        lines = [l.strip('\n\r') for l in file]
+        # Check format
+        # data = file.read()
+        # if "//" in data:
+        if "car" in file_path or "monkey" in file_path:
+            return load_obj_other_format(lines)
+        for line in lines:
+            split_line = line.split(" ")
+            split_line = [x for x in split_line if x != ""]
+            match split_line[0]:
+                case "v":
+                    positions.append([split_line[1], split_line[2], split_line[3]])
+                case "vt":
+                    uvs.append([split_line[1], split_line[2]])
+                case "vn":
+                    normals.append([split_line[1], split_line[2], split_line[3]])
+                case "f":
+                    # A triangle. Each index (1, 2, 3) is a vertice
+                    faces.append(split_line[1]) # "0/0/0"
+                    faces.append(split_line[2])
+                    faces.append(split_line[3])
+                    
+        for face in faces:
+            indices = face.split("/") # ["1", "6", "3"]
+            indices = [int(num) for num in indices]
+            position = positions[indices[0]]
+            uv = uvs[indices[1]]
+            normal = normals[indices[2]]
+            vertices.extend([float(num) for num in position])
+            vertices.extend([float(num) for num in normal])
+            vertices.extend([float(num) for num in uv])
+    
+    return np.array(vertices, dtype=np.float32)
+
+def load_obj_other_format(lines) -> np.ndarray:
+    vertices: list[float] = [] # x y z nx ny nz u v x y z nx ny z u v
+    positions: list[tuple[float, float, float]] = []
+    normals: list[tuple[float, float, float]] = []
+    triangles: list[tuple[tuple[float, float], tuple[float, float], tuple[float, float]]] = []
+    for line in lines:
+        if line:
+            split_line = line.split()
+            split_line = [x for x in split_line if (x != "" and x != " " and x != "  ")]
+            match split_line[0]:
+                case "v":
+                    positions.append((float(split_line[1]), float(split_line[2]), float(split_line[3])))
+                case "vn":
+                    normals.append((float(split_line[1]), float(split_line[2]), float(split_line[3])))
+                case "f":
+                    temp_vertices = [] # [[1, 1], [2, 1], [2, 4]]
+                    temp_vertices.append([int(x) - 1 for x in split_line[1].split("//")])
+                    temp_vertices.append([int(x) - 1 for x in split_line[2].split("//")])
+                    temp_vertices.append([int(x) - 1 for x in split_line[3].split("//")])
+                    triangles.append(
+                        (temp_vertices[0], temp_vertices[1], temp_vertices[2])
+                    )
+    for triangle in triangles:
+        a = triangle[0]
+        b = triangle[1]
+        c = triangle[2]
+        vertices.extend(positions[a[0]])
+        vertices.extend(normals[a[1]])
+        vertices.extend([0, 0])
         
-        return np.array(vertices, dtype=np.float32)
+        vertices.extend(positions[b[0]])
+        vertices.extend(normals[b[1]])
+        vertices.extend([1, 0])
+        
+        vertices.extend(positions[c[0]])
+        vertices.extend(normals[c[1]])
+        vertices.extend([0, 1])
+    return np.array(vertices, dtype=np.float32)

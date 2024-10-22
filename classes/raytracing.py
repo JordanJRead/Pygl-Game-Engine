@@ -68,7 +68,8 @@ def find_t_of_game_object(origin: Vec3, dir: Vec3, game_object: GameObject, view
                 smallest_t = t_value
     return smallest_t
 
-# FIXME children?
+# FIXME No children check
+# NOTE Way too slow with bigger meshes
 def ray_cast_game_objects(origin: Vec3, dir: Vec3, game_objects: list[GameObject], view_matrix, default_render_component: RenderComponent | None = None) -> GameObject | None:
     """Given a ray in camera space, returns the hit game object if it exists"""
     smallest_t = None

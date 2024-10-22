@@ -9,8 +9,18 @@ uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 out vec2 fragTexCoords;
+out float lightIntensity;
 
 void main() {
+    vec3 lightDir = vec3(0, -1, 1);
+    lightDir = normalize(lightDir);
+    float ambientLight = 0.3;
+
     gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPos, 1);
     fragTexCoords = texCoords;
+
+    lightIntensity = dot(normal, -lightDir);
+    lightIntensity = clamp(lightIntensity, 0, 1);
+    lightIntensity += ambientLight;
+    lightIntensity = clamp(lightIntensity, 0, 1);
 }

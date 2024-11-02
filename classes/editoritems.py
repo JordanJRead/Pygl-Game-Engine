@@ -7,6 +7,7 @@ from classes.vec3 import Vec3
 import inspect
 import typing
 from pydoc import locate
+from pathlib import Path
 
 class InputPanel:
     """A 2d grid of input fields with a function to be run when data is inputed"""
@@ -398,8 +399,34 @@ class CreationButtons:
         self.child_button = pgui.elements.UIButton(self.child_button_rect, "Create Child Game Object", object_id="@grey_button")
     
 class FileDisplay(ScrollableContainer):
-    def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager) -> None:
+    def __init__(self, rect: pg.Rect, ui_manager: pgui.UIManager, base_path_str: str) -> None:
         super().__init__()
+        self.rect = rect
+        self.icon_size = 100
+        self.x_margin = 25
+        self.y_margin = 25
+        self.x_gap = 10
+        self.y_gap = 25
+
+        content_width = self.rect.width - 2 * self.x_margin
+        self.row_size = content_width // (self.icon_size + self.x_gap)
+
+        content_height = self.rect.height - 2 * self.y_margin
+        self.col_size = content_height // (self.icon_size + self.y_gap)
+
         self.ui_manager = ui_manager
         self.rect = rect
         self.panel = pgui.elements.UIPanel(rect, manager=self.ui_manager)
+        self.base_path = Path(base_path_str)
+        self.current_path = Path(base_path_str)
+        self.folder_buttons: dict[pgui.elements.UIButton, str] = []
+        self.file_buttons: list[pgui.elements.UIButton] = []
+        self.build()
+    
+    def build(self):
+        row = 0
+        col = 0
+        for sub_dir in [x for x in self.current_path.iterdir() if x.is_dir()]:
+            pass
+            # self.folder_buttons[pgui.elements.UIButton("rect", "", self.ui_manager, self.panel, parent_element=self.panel, object_id="@folder_button")] = str(sub_dir)
+

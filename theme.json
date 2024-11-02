@@ -142,6 +142,38 @@
         }
     },
 
+    "@folder_button": {
+        "images": {
+            "normal_image": {
+                "path": "editorassets/images/folder.png"
+            }
+        }
+    },
+    
+    "@obj_file_button": {
+        "images": {
+            "normal_image": {
+                "path": "editorassets/images/objfile.png"
+            }
+        }
+    },
+    
+    "@png_file_button": {
+        "images": {
+            "normal_image": {
+                "path": "editorassets/images/pngfile.png"
+            }
+        }
+    },
+    
+    "@py_file_button": {
+        "images": {
+            "normal_image": {
+                "path": "editorassets/images/pyfile.png"
+            }
+        }
+    },
+
     "panel": {
         "colours": {
             "normal_border": "rgb(6, 8, 5)",

@@ -12,6 +12,7 @@ from typing import Any
 import json
 from classes import raytracing
 from math import tan, radians
+from pathlib import Path
 # TODO clean up hierarchy code
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
@@ -63,7 +64,7 @@ class Editor(App):
         # File display
         file_display_y_padding = 25
         file_display_rect = pg.Rect(self.viewport_rect.left, self.viewport_rect.bottom + file_display_y_padding, self.viewport_rect.width, self.height - file_display_y_padding * 2 - self.viewport_rect.bottom)
-        self.file_display = FileDisplay(file_display_rect, self.ui_manager)
+        self.file_display = FileDisplay(file_display_rect, self.ui_manager, "./assets")
 
     def select_game_object(self, game_object: GameObject):
         if game_object is None:
@@ -92,6 +93,7 @@ class Editor(App):
         self.running = True
         self.delta_time = self.clock.tick(self.FPS) / 1000
         while self.running:
+            print(1 / self.delta_time)
             keys = pg.key.get_pressed()
             if keys[pg.K_s] and keys[pg.K_LCTRL]:
                 self.save()

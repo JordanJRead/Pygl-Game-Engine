@@ -244,12 +244,13 @@ class Inspector(ScrollableContainer):
         self.ui_manager = ui_manager
         self.rect = rect
         self.panel = pgui.elements.UIPanel(rect, manager=ui_manager)
+        self.delete_button: None | pgui.elements.UIButton = None
         
         self.input_panels: list[InputPanel] = []
 
     @staticmethod
     def render_component_update_function(game_object: GameObject, rows: list[list[pgui.elements.UITextEntryLine]], func_data: list[any]):
-        game_object.render_component.update_paths("assets/objects/" + rows[0][0].text, "assets/images/" + rows[1][0].text)
+        game_object.render_component.update_paths(rows[0][0].text, rows[1][0].text)
         game_object.render_component.is_bright = True
 
     @staticmethod
@@ -349,7 +350,7 @@ class Inspector(ScrollableContainer):
             current_y += transform_panel.rect.height + y_margin
 
             # Render object panel
-            default_values = [[game_object.render_component.obj_path.removeprefix("assets/objects/")], [game_object.render_component.image_path.removeprefix("assets/images/")]]
+            default_values = [[game_object.render_component.obj_path], [game_object.render_component.image_path]]
             item_labels = []
             item_labels.append(["Obj File"])
             item_labels.append(["Image File"])
@@ -419,14 +420,58 @@ class FileDisplay(ScrollableContainer):
         self.panel = pgui.elements.UIPanel(rect, manager=self.ui_manager)
         self.base_path = Path(base_path_str)
         self.current_path = Path(base_path_str)
-        self.folder_buttons: dict[pgui.elements.UIButton, str] = []
-        self.file_buttons: list[pgui.elements.UIButton] = []
+        self.folder_buttons: dict[pgui.elements.UIButton, str] = dict()
+        self.file_buttons: list[pgui.elements.UIButton] = dict()
+        self.labels: list[pgui.elements.UILabel] = []
         self.build()
     
-    def build(self):
+    def build(self, ignore=None):
+        self.destroy()
         row = 0
         col = 0
-        for sub_dir in [x for x in self.current_path.iterdir() if x.is_dir()]:
-            pass
-            # self.folder_buttons[pgui.elements.UIButton("rect", "", self.ui_manager, self.panel, parent_element=self.panel, object_id="@folder_button")] = str(sub_dir)
 
+        if str(self.base_path) != str(self.current_path):
+            button_rect = pg.Rect(self.x_margin + row * self.x_gap + row * self.icon_size, self.y_margin + col * self.y_gap + col * self.icon_size + self.y_scroll, self.icon_size, self.icon_size)
+            prev_dir_string = str(self.current_path)[0:self.current_path.as_posix().rindex("/")]
+            self.folder_buttons[pgui.elements.UIButton(button_rect, "", self.ui_manager, self.panel, parent_element=self.panel, object_id="@folder_button")] = prev_dir_string
+            self.labels.append(pgui.elements.UILabel(pg.Rect(button_rect.left, button_rect.bottom, button_rect.width, self.y_gap), "...", self.ui_manager, self.panel, self.panel))
+            row += 1
+
+        for sub_dir in [x for x in self.current_path.iterdir() if x.is_dir()]:
+            button_rect = pg.Rect(self.x_margin + row * self.x_gap + row * self.icon_size, self.y_margin + col * self.y_gap + col * self.icon_size + self.y_scroll, self.icon_size, self.icon_size)
+            self.folder_buttons[pgui.elements.UIButton(button_rect, "", self.ui_manager, self.panel, parent_element=self.panel, object_id="@folder_button")] = str(sub_dir)
+            self.labels.append(pgui.elements.UILabel(pg.Rect(button_rect.left, button_rect.bottom, button_rect.width, self.y_gap), sub_dir.as_posix().split("/")[-1], self.ui_manager, self.panel, self.panel))
+            row += 1
+            if row == self.row_size:
+                row = 0
+                col += 1
+
+        for sub_file in [x for x in self.current_path.iterdir() if x.is_file()]:
+            file_extension = str(sub_file).split(".")[-1]
+            object_id = ""
+            match file_extension:
+                case "py":
+                    object_id = "@py_file_button"
+                case "obj":
+                    object_id = "@obj_file_button"
+                case "png":
+                    object_id = "@png_file_button"
+            button_rect = pg.Rect(self.x_margin + row * self.x_gap + row * self.icon_size, self.y_margin + col * self.y_gap + col * self.icon_size + self.y_scroll, self.icon_size, self.icon_size)
+            self.file_buttons[pgui.elements.UIButton(button_rect, "", self.ui_manager, self.panel, parent_element=self.panel, object_id=object_id)] = str(sub_file)
+            self.labels.append(pgui.elements.UILabel(pg.Rect(button_rect.left, button_rect.bottom, button_rect.width, self.y_gap), sub_file.as_posix().split("/")[-1], self.ui_manager, self.panel, self.panel))
+            row += 1
+            if row == self.row_size:
+                row = 0
+                col += 1
+
+        self.y_distance = self.y_margin * 2 + (self.icon_size + self.y_gap) * (col + 1)
+    
+    def destroy(self):
+        for file_button in self.folder_buttons:
+            file_button.kill()
+        for file_button in self.file_buttons:
+            file_button.kill()
+        for label in self.labels:
+            label.kill()
+        self.folder_buttons = dict()
+        self.file_buttons = dict()

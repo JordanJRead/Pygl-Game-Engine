@@ -13,6 +13,7 @@ import json
 from classes import raytracing
 from math import tan, radians
 from pathlib import Path
+import pyperclip
 # TODO clean up hierarchy code
 class Editor(App):
     def __init__(self, width: int, height: int, FPS: int) -> None:
@@ -93,7 +94,6 @@ class Editor(App):
         self.running = True
         self.delta_time = self.clock.tick(self.FPS) / 1000
         while self.running:
-            print(1 / self.delta_time)
             keys = pg.key.get_pressed()
             if keys[pg.K_s] and keys[pg.K_LCTRL]:
                 self.save()
@@ -175,6 +175,8 @@ class Editor(App):
                         hovered_object = self.hierarchy
                     if pg.Rect.collidepoint(self.inspector.rect, pg.mouse.get_pos()):
                         hovered_object = self.inspector
+                    if pg.Rect.collidepoint(self.file_display.rect, pg.mouse.get_pos()):
+                        hovered_object = self.file_display
                     if hovered_object:
                         if keys[pg.K_LSHIFT]:
                             hovered_object.update_x_scroll(event.y * 200)
@@ -184,6 +186,15 @@ class Editor(App):
                 
                 # Buttons
                 case pgui.UI_BUTTON_PRESSED:
+                    
+                    # File display
+                    for folder_button in self.file_display.folder_buttons:
+                        if event.ui_element == folder_button:
+                            self.file_display.current_path = Path(self.file_display.folder_buttons[folder_button])
+                            self.file_display.build()
+                    for file_button in self.file_display.file_buttons:
+                        if event.ui_element == file_button:
+                            pyperclip.copy(self.file_display.file_buttons[file_button])
 
                     # Hierarchy
                     for button in self.hierarchy.game_object_buttons:

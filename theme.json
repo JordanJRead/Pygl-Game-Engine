@@ -142,7 +142,30 @@
         }
     },
 
+
     "@folder_button": {
+        "colours": {
+            "normal_bg":"#00000000, #00000000, 270",
+            "hovered_bg":"#804000",
+            "disabled_bg":"#00000000",
+            "selected_bg":"#00000000",
+            "dark_bg":"#00000000",
+            "normal_text":"#00000000",
+            "hovered_text":"#00000000",
+            "selected_text":"#00000000",
+            "disabled_text":"#00000000",
+            "link_text": "#00000000",
+            "link_hover": "#00000000",
+            "link_selected": "#00000000",
+            "text_shadow": "#00000000",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000",
+            "disabled_border": "#00000000",
+            "selected_border": "#00000000",
+            "active_border": "#00000000",
+            "filled_bar":"#00000000",
+            "unfilled_bar":"#00000000"
+        },
         "images": {
             "normal_image": {
                 "path": "editorassets/images/folder.png"
@@ -151,6 +174,28 @@
     },
     
     "@obj_file_button": {
+        "colours": {
+            "normal_bg":"#00000000",
+            "hovered_bg":"#804000",
+            "disabled_bg":"#00000000",
+            "selected_bg":"#00000000",
+            "dark_bg":"#00000000",
+            "normal_text":"#00000000",
+            "hovered_text":"#00000000",
+            "selected_text":"#00000000",
+            "disabled_text":"#00000000",
+            "link_text": "#00000000",
+            "link_hover": "#00000000",
+            "link_selected": "#00000000",
+            "text_shadow": "#00000000",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000",
+            "disabled_border": "#00000000",
+            "selected_border": "#00000000",
+            "active_border": "#00000000",
+            "filled_bar":"#00000000",
+            "unfilled_bar":"#00000000"
+        },
         "images": {
             "normal_image": {
                 "path": "editorassets/images/objfile.png"
@@ -159,6 +204,28 @@
     },
     
     "@png_file_button": {
+        "colours": {
+            "normal_bg":"#00000000, #00000000, 270",
+            "hovered_bg":"#804000",
+            "disabled_bg":"#00000000",
+            "selected_bg":"#00000000",
+            "dark_bg":"#00000000",
+            "normal_text":"#00000000",
+            "hovered_text":"#00000000",
+            "selected_text":"#00000000",
+            "disabled_text":"#00000000",
+            "link_text": "#00000000",
+            "link_hover": "#00000000",
+            "link_selected": "#00000000",
+            "text_shadow": "#00000000",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000",
+            "disabled_border": "#00000000",
+            "selected_border": "#00000000",
+            "active_border": "#00000000",
+            "filled_bar":"#00000000",
+            "unfilled_bar":"#00000000"
+        },
         "images": {
             "normal_image": {
                 "path": "editorassets/images/pngfile.png"
@@ -167,12 +234,35 @@
     },
     
     "@py_file_button": {
+        "colours": {
+            "normal_bg":"#00000000, #00000000, 270",
+            "hovered_bg":"#804000",
+            "disabled_bg":"#00000000",
+            "selected_bg":"#00000000",
+            "dark_bg":"#00000000",
+            "normal_text":"#00000000",
+            "hovered_text":"#00000000",
+            "selected_text":"#00000000",
+            "disabled_text":"#00000000",
+            "link_text": "#00000000",
+            "link_hover": "#00000000",
+            "link_selected": "#00000000",
+            "text_shadow": "#00000000",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000",
+            "disabled_border": "#00000000",
+            "selected_border": "#00000000",
+            "active_border": "#00000000",
+            "filled_bar":"#00000000",
+            "unfilled_bar":"#00000000"
+        },
         "images": {
             "normal_image": {
                 "path": "editorassets/images/pyfile.png"
             }
         }
     },
+
 
     "panel": {
         "colours": {

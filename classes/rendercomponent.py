@@ -76,7 +76,7 @@ def load_obj(file_path: str) -> np.ndarray:
                     
         for face in faces:
             indices = face.split("/") # ["1", "6", "3"]
-            indices = [int(num) for num in indices]
+            indices = [int(num) - 1 for num in indices]
             position = positions[indices[0]]
             uv = uvs[indices[1]]
             normal = normals[indices[2]]

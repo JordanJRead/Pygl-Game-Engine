@@ -24,7 +24,7 @@ class Renderer:
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader, "tex"), 0)
 
-        self.quad_shader = self.create_shader("shaders/tex_vertex.glsl", "shaders/tex_fragment.glsl")
+        self.quad_shader = self.create_shader("shaders/quad_vertex.glsl", "shaders/quad_fragment.glsl")
         glUniform1i(glGetUniformLocation(self.quad_shader, "tex"), 0)
 
         self.quad_vertices = [

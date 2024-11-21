@@ -25,7 +25,7 @@ class Renderer:
         glUniform1i(glGetUniformLocation(self.shader, "tex"), 0)
 
         self.quad_shader = self.create_shader("shaders/quad_vertex.glsl", "shaders/quad_fragment.glsl")
-        glUniform1i(glGetUniformLocation(self.quad_shader, "tex"), 0)
+        glUniform1i(glGetUniformLocation(self.quad_shader, "image"), 0)
 
         self.quad_vertices = [
             # Top right
